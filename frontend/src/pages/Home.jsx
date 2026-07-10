@@ -99,60 +99,66 @@ function Home() {
               ))}
             </div>
 
-            <div className="editor-card">
-              <div className="editor-toolbar">
-                <span>{activeLang} Editor</span>
-                <span className="editor-pill">AI-ready</span>
-              </div>
-              <MonacoEditor
-                height="320px"
-                language={languageMap[activeLang]}
-                value={code}
-                theme={theme === 'dark' ? 'vs-dark' : 'vs-light'}
-                onChange={(value) => setCode(value ?? '')}
-                options={{
-                  minimap: { enabled: false },
-                  fontSize: 14,
-                  lineNumbers: 'on',
-                  scrollBeyondLastLine: false,
-                  automaticLayout: true,
-                  padding: { top: 12, bottom: 12 },
-                }}
-              />
-            </div>
-
-            <div className="prompt-box">
-              <label htmlFor="ai-prompt">What would you like DevMate AI to do?</label>
-              <textarea
-                id="ai-prompt"
-                value={prompt}
-                onChange={(event) => setPrompt(event.target.value)}
-                rows="3"
-                placeholder="Ask for review, explanation, bug fixing, or optimization..."
-              />
-            </div>
-
-            <button type="button" className="generate-button" onClick={handleGenerate}>
-              {isGenerating ? 'Generating...' : 'Generate'}
-            </button>
-
-            <div className="result-summary">
-              <h2>AI Analysis</h2>
-              <p>{isGenerating ? 'Reviewing your code...' : 'Your latest review is ready.'}</p>
-            </div>
-
-            <div className="assistant-card">
-              <h3>Assistant response</h3>
-              <p>{assistantMessage}</p>
-            </div>
-
-            <div className="result-grid">
-              {results.map((item) => (
-                <div key={item.title} className="result-card">
-                  <h3>{item.title}</h3>
-                  <p>{item.value}</p>
+            <div className="workspace-grid">
+              <div className="editor-shell">
+                <div className="editor-card">
+                  <div className="editor-toolbar">
+                    <span>{activeLang} Editor</span>
+                    <span className="editor-pill">AI-ready</span>
+                  </div>
+                  <MonacoEditor
+                    height="420px"
+                    language={languageMap[activeLang]}
+                    value={code}
+                    theme={theme === 'dark' ? 'vs-dark' : 'vs-light'}
+                    onChange={(value) => setCode(value ?? '')}
+                    options={{
+                      minimap: { enabled: false },
+                      fontSize: 14,
+                      lineNumbers: 'on',
+                      scrollBeyondLastLine: false,
+                      automaticLayout: true,
+                      padding: { top: 12, bottom: 12 },
+                    }}
+                  />
                 </div>
-              ))}
+              </div>
+
+              <div className="analysis-shell">
+                <div className="prompt-box">
+                  <label htmlFor="ai-prompt">What would you like DevMate AI to do?</label>
+                  <textarea
+                    id="ai-prompt"
+                    value={prompt}
+                    onChange={(event) => setPrompt(event.target.value)}
+                    rows="3"
+                    placeholder="Ask for review, explanation, bug fixing, or optimization..."
+                  />
+                </div>
+
+                <button type="button" className="generate-button" onClick={handleGenerate}>
+                  {isGenerating ? 'Generating...' : 'Generate'}
+                </button>
+
+                <div className="result-summary">
+                  <h2>AI Analysis</h2>
+                  <p>{isGenerating ? 'Reviewing your code...' : 'Your latest review is ready.'}</p>
+                </div>
+
+                <div className="assistant-card">
+                  <h3>Assistant response</h3>
+                  <p>{assistantMessage}</p>
+                </div>
+
+                <div className="result-grid">
+                  {results.map((item) => (
+                    <div key={item.title} className="result-card">
+                      <h3>{item.title}</h3>
+                      <p>{item.value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </section>
         </main>
