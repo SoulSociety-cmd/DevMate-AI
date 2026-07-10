@@ -19,7 +19,7 @@ const codeSamples = {
   JavaScript: `function greet(name) {\n  return \`Hello, \${name}\`;\n}\n\nconsole.log(greet('DevMate AI'))`,
 }
 
-const resultCards = [
+const initialResults = [
   { title: 'Score', value: '92/100' },
   { title: 'Bugs', value: '3 minor issues' },
   { title: 'Performance', value: 'Optimized' },
@@ -31,18 +31,55 @@ const resultCards = [
 function Home() {
   const [activeLang, setActiveLang] = useState('Python')
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [theme, setTheme] = useState('dark')
   const [code, setCode] = useState(codeSamples.Python)
+  const [results, setResults] = useState(initialResults)
+  const [isGenerating, setIsGenerating] = useState(false)
 
   useEffect(() => {
     setCode(codeSamples[activeLang])
   }, [activeLang])
 
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+  }, [theme])
+
+  const handleGenerate = () => {
+    setIsGenerating(true)
+
+    window.setTimeout(() => {
+      const score = 84 + (code.length % 8)
+      const bugCount = code.includes('console.log') || code.includes('print') ? '1 minor issue' : '2 minor issues'
+      const security = code.includes('password') ? 'Needs review' : 'Secure'
+      const suggestions = activeLang === 'JavaScript' ? '2 refactors' : '4 actionable tips'
+
+      setResults([
+        { title: 'Score', value: `${score}/100` },
+        { title: 'Bugs', value: bugCount },
+        { title: 'Performance', value: 'Improved by 18%' },
+        { title: 'Security', value: security },
+        { title: 'Suggestions', value: suggestions },
+        { title: 'Improved Code', value: 'Ready to paste' },
+      ])
+      setIsGenerating(false)
+    }, 400)
+  }
+
   return (
     <div className="dashboard-shell">
+      <div
+        className={`sidebar-overlay ${sidebarOpen ? 'active' : ''}`}
+        onClick={() => setSidebarOpen(false)}
+        role="presentation"
+      />
       <AppSidebar isOpen={sidebarOpen} />
 
       <div className="dashboard-main">
-        <AppHeader onToggleSidebar={() => setSidebarOpen((prev) => !prev)} />
+        <AppHeader
+          onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
+          theme={theme}
+          onToggleTheme={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
+        />
 
         <main className="workspace-content">
           <section className="panel">
@@ -68,7 +105,7 @@ function Home() {
                 height="320px"
                 language={languageMap[activeLang]}
                 value={code}
-                theme="vs-dark"
+                theme={theme === 'dark' ? 'vs-dark' : 'vs-light'}
                 onChange={(value) => setCode(value ?? '')}
                 options={{
                   minimap: { enabled: false },
@@ -81,12 +118,17 @@ function Home() {
               />
             </div>
 
-            <button type="button" className="generate-button">
-              Generate
+            <button type="button" className="generate-button" onClick={handleGenerate}>
+              {isGenerating ? 'Generating...' : 'Generate'}
             </button>
 
+            <div className="result-summary">
+              <h2>AI Analysis</h2>
+              <p>{isGenerating ? 'Reviewing your code...' : 'Your latest review is ready.'}</p>
+            </div>
+
             <div className="result-grid">
-              {resultCards.map((item) => (
+              {results.map((item) => (
                 <div key={item.title} className="result-card">
                   <h3>{item.title}</h3>
                   <p>{item.value}</p>
