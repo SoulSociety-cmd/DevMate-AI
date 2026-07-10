@@ -253,6 +253,29 @@ button {
   box-shadow: 0 12px 24px rgba(109, 93, 252, 0.25);
 }
 
+.prompt-box {
+  margin: 1rem 0 0.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.prompt-box label {
+  font-size: 0.92rem;
+  color: var(--muted);
+}
+
+.prompt-box textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 82px;
+  padding: 0.8rem 0.9rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+}
+
 .result-summary {
   margin: 0.7rem 0 0.9rem;
 }
@@ -263,6 +286,24 @@ button {
 }
 
 .result-summary p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.assistant-card {
+  margin-bottom: 0.9rem;
+  padding: 0.95rem 1rem;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.assistant-card h3 {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+}
+
+.assistant-card p {
   margin: 0;
   color: var(--muted);
 }

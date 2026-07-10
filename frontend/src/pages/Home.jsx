@@ -35,6 +35,8 @@ function Home() {
   const [code, setCode] = useState(codeSamples.Python)
   const [results, setResults] = useState(initialResults)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [prompt, setPrompt] = useState('Improve this code and explain the changes.')
+  const [assistantMessage, setAssistantMessage] = useState('Your AI review will appear here with focused suggestions.')
 
   useEffect(() => {
     setCode(codeSamples[activeLang])
@@ -61,6 +63,7 @@ function Home() {
         { title: 'Suggestions', value: suggestions },
         { title: 'Improved Code', value: 'Ready to paste' },
       ])
+      setAssistantMessage(`Focused review for ${activeLang}: ${prompt || 'Your prompt'} — improved readability, reduced complexity, and kept the logic intact.`)
       setIsGenerating(false)
     }, 400)
   }
@@ -118,6 +121,17 @@ function Home() {
               />
             </div>
 
+            <div className="prompt-box">
+              <label htmlFor="ai-prompt">What would you like DevMate AI to do?</label>
+              <textarea
+                id="ai-prompt"
+                value={prompt}
+                onChange={(event) => setPrompt(event.target.value)}
+                rows="3"
+                placeholder="Ask for review, explanation, bug fixing, or optimization..."
+              />
+            </div>
+
             <button type="button" className="generate-button" onClick={handleGenerate}>
               {isGenerating ? 'Generating...' : 'Generate'}
             </button>
@@ -125,6 +139,11 @@ function Home() {
             <div className="result-summary">
               <h2>AI Analysis</h2>
               <p>{isGenerating ? 'Reviewing your code...' : 'Your latest review is ready.'}</p>
+            </div>
+
+            <div className="assistant-card">
+              <h3>Assistant response</h3>
+              <p>{assistantMessage}</p>
             </div>
 
             <div className="result-grid">
