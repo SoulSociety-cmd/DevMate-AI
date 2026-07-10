@@ -326,12 +326,17 @@ button {
   border-radius: 14px;
   padding: 0.8rem;
   background: rgba(255, 255, 255, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
 }
 
 .chat-messages {
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
+  max-height: 220px;
+  overflow-y: auto;
 }
 
 .chat-bubble {
@@ -352,6 +357,35 @@ button {
   align-self: flex-end;
   background: rgba(34, 197, 94, 0.14);
   color: var(--text);
+}
+
+.chat-input-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.65rem;
+}
+
+.chat-input-row input {
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+}
+
+.chat-input-row input::placeholder {
+  color: var(--muted);
+}
+
+.chat-send {
+  min-width: 90px;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  border: none;
+  background: var(--accent);
+  color: white;
+  font-weight: 600;
 }
 
 .result-grid {

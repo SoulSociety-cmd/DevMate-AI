@@ -40,6 +40,7 @@ function Home() {
   const [chatMessages, setChatMessages] = useState([
     { role: 'assistant', text: 'Hello! I can review, explain, or improve your code.' },
   ])
+  const [chatInput, setChatInput] = useState('')
 
   useEffect(() => {
     setCode(codeSamples[activeLang])
@@ -166,6 +167,42 @@ function Home() {
                       </div>
                     ))}
                   </div>
+                  <div className="chat-input-row">
+                    <input
+                    type="text"
+                    value={chatInput}
+                    onChange={(event) => setChatInput(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' && !event.shiftKey) {
+                        event.preventDefault()
+                        const message = chatInput.trim() || 'Tell me more about the code.'
+                        setChatMessages((prev) => [
+                          ...prev,
+                          { role: 'user', text: message },
+                          { role: 'assistant', text: `I analyzed your request: ${message}. Here's a concise follow-up based on the current code.` },
+                        ])
+                        setChatInput('')
+                      }
+                    }}
+                    aria-label="Chat message"
+                    placeholder="Ask the assistant a follow-up question..."
+                  />
+                  <button
+                    type="button"
+                    className="chat-send"
+                    onClick={() => {
+                      const message = chatInput.trim() || 'Tell me more about the code.'
+                      setChatMessages((prev) => [
+                        ...prev,
+                        { role: 'user', text: message },
+                        { role: 'assistant', text: `I analyzed your request: ${message}. Here's a concise follow-up based on the current code.` },
+                      ])
+                      setChatInput('')
+                    }}
+                  >
+                    Send
+                  </button>
+                </div>
                 </div>
 
                 <div className="result-grid">
