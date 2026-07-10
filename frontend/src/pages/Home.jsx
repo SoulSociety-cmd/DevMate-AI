@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import MonacoEditor from '@monaco-editor/react'
+import { analyzeCode } from '../services/api.js'
 import AppHeader from '../components/AppHeader.jsx'
 import AppSidebar from '../components/AppSidebar.jsx'
 import '../styles/app-shell.css'
@@ -50,31 +51,25 @@ function Home() {
     document.documentElement.setAttribute('data-theme', theme)
   }, [theme])
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     setIsGenerating(true)
 
-    window.setTimeout(() => {
-      const score = 84 + (code.length % 8)
-      const bugCount = code.includes('console.log') || code.includes('print') ? '1 minor issue' : '2 minor issues'
-      const security = code.includes('password') ? 'Needs review' : 'Secure'
-      const suggestions = activeLang === 'JavaScript' ? '2 refactors' : '4 actionable tips'
+    try {
+      const response = await analyzeCode({ code, language: activeLang, prompt })
+      const { results: apiResults, assistantMessage: apiAssistantMessage } = response.data
 
-      setResults([
-        { title: 'Score', value: `${score}/100` },
-        { title: 'Bugs', value: bugCount },
-        { title: 'Performance', value: 'Improved by 18%' },
-        { title: 'Security', value: security },
-        { title: 'Suggestions', value: suggestions },
-        { title: 'Improved Code', value: 'Ready to paste' },
-      ])
-      setAssistantMessage(`Focused review for ${activeLang}: ${prompt || 'Your prompt'} — improved readability, reduced complexity, and kept the logic intact.`)
+      setResults(apiResults)
+      setAssistantMessage(apiAssistantMessage)
       setChatMessages((prev) => [
         ...prev,
         { role: 'user', text: prompt || 'Improve this code' },
-        { role: 'assistant', text: `Review complete for ${activeLang}. I found ${bugCount} and suggested a cleaner structure.` },
+        { role: 'assistant', text: apiAssistantMessage },
       ])
+    } catch (error) {
+      setAssistantMessage('Unable to reach the backend. Please make sure the API server is running.')
+    } finally {
       setIsGenerating(false)
-    }, 400)
+    }
   }
 
   return (

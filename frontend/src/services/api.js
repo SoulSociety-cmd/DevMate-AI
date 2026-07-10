@@ -6,5 +6,6 @@ const api = axios.create({
 })
 
 export const getHealth = async () => api.get('/api/health')
+export const analyzeCode = async (payload) => api.post('/api/analyze', payload)
 
 export default api
