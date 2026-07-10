@@ -37,6 +37,9 @@ function Home() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [prompt, setPrompt] = useState('Improve this code and explain the changes.')
   const [assistantMessage, setAssistantMessage] = useState('Your AI review will appear here with focused suggestions.')
+  const [chatMessages, setChatMessages] = useState([
+    { role: 'assistant', text: 'Hello! I can review, explain, or improve your code.' },
+  ])
 
   useEffect(() => {
     setCode(codeSamples[activeLang])
@@ -64,6 +67,11 @@ function Home() {
         { title: 'Improved Code', value: 'Ready to paste' },
       ])
       setAssistantMessage(`Focused review for ${activeLang}: ${prompt || 'Your prompt'} — improved readability, reduced complexity, and kept the logic intact.`)
+      setChatMessages((prev) => [
+        ...prev,
+        { role: 'user', text: prompt || 'Improve this code' },
+        { role: 'assistant', text: `Review complete for ${activeLang}. I found ${bugCount} and suggested a cleaner structure.` },
+      ])
       setIsGenerating(false)
     }, 400)
   }
@@ -148,6 +156,16 @@ function Home() {
                 <div className="assistant-card">
                   <h3>Assistant response</h3>
                   <p>{assistantMessage}</p>
+                </div>
+
+                <div className="chat-card">
+                  <div className="chat-messages">
+                    {chatMessages.map((message, index) => (
+                      <div key={`${message.role}-${index}`} className={`chat-bubble ${message.role}`}>
+                        <span>{message.text}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="result-grid">
