@@ -236,6 +236,11 @@ button {
   background: #020617;
 }
 
+.code-editor-shell {
+  display: flex;
+  flex-direction: column;
+}
+
 .editor-toolbar {
   display: flex;
   justify-content: space-between;
@@ -246,12 +251,50 @@ button {
   color: var(--muted);
 }
 
+.editor-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
 .editor-pill {
   padding: 0.3rem 0.6rem;
   border-radius: 999px;
   background: var(--accent-soft);
   color: #c7d2fe;
   font-size: 0.75rem;
+}
+
+.clear-button {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+}
+
+.editor-surface {
+  position: relative;
+  min-height: 420px;
+}
+
+.editor-placeholder {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  padding: 1rem 1rem 1rem 1.2rem;
+  color: #64748b;
+  font-size: 0.92rem;
+  white-space: pre-wrap;
+  overflow: hidden;
+  opacity: 0.9;
+}
+
+.editor-placeholder pre {
+  margin: 0;
+  font: inherit;
+  color: inherit;
 }
 
 .generate-button {

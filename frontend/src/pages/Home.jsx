@@ -1,17 +1,11 @@
 import { useEffect, useState } from 'react'
-import MonacoEditor from '@monaco-editor/react'
 import { analyzeCode } from '../services/api.js'
 import AppHeader from '../components/AppHeader.jsx'
 import AppSidebar from '../components/AppSidebar.jsx'
+import CodeEditor from '../components/CodeEditor.jsx'
 import '../styles/app-shell.css'
 
 const languages = ['C++', 'Python', 'Java', 'JavaScript']
-const languageMap = {
-  'C++': 'cpp',
-  Python: 'python',
-  Java: 'java',
-  JavaScript: 'javascript',
-}
 
 const codeSamples = {
   'C++': `#include <iostream>\n\nint main() {\n    std::cout << "Hello DevMate AI" << std::endl;\n    return 0;\n}`,
@@ -106,24 +100,11 @@ function Home() {
             <div className="workspace-grid">
               <div className="editor-shell">
                 <div className="editor-card">
-                  <div className="editor-toolbar">
-                    <span>{activeLang} Editor</span>
-                    <span className="editor-pill">AI-ready</span>
-                  </div>
-                  <MonacoEditor
-                    height="420px"
-                    language={languageMap[activeLang]}
+                  <CodeEditor
+                    language={activeLang}
                     value={code}
-                    theme={theme === 'dark' ? 'vs-dark' : 'vs-light'}
                     onChange={(value) => setCode(value ?? '')}
-                    options={{
-                      minimap: { enabled: false },
-                      fontSize: 14,
-                      lineNumbers: 'on',
-                      scrollBeyondLastLine: false,
-                      automaticLayout: true,
-                      padding: { top: 12, bottom: 12 },
-                    }}
+                    theme={theme}
                   />
                 </div>
               </div>
