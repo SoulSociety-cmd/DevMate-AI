@@ -1,4 +1,8 @@
 import { useEffect, useState } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import rehypeHighlight from 'rehype-highlight'
+import 'highlight.js/styles/github-dark.css'
 import { reviewCode } from '../services/reviewService.js'
 import AppHeader from '../components/AppHeader.jsx'
 import AppSidebar from '../components/AppSidebar.jsx'
@@ -22,6 +26,25 @@ const initialResults = [
   { title: 'Suggestions', value: 'Pending' },
   { title: 'Improved Code', value: 'Pending' },
 ]
+
+const toMarkdownText = (value) => {
+  if (Array.isArray(value)) {
+    return value.map((item) => `- ${item}`).join('\n')
+  }
+
+  if (typeof value === 'string') {
+    return value
+  }
+
+  return String(value ?? '')
+}
+
+const getScoreLabel = (score) => {
+  if (score >= 85) return 'Excellent'
+  if (score >= 70) return 'Good'
+  if (score >= 50) return 'Needs attention'
+  return 'High risk'
+}
 
 function Home() {
   const [activeLang, setActiveLang] = useState('Python')
@@ -64,12 +87,12 @@ function Home() {
       }
 
       const mappedResults = [
-        { title: 'Score', value: `${reviewData.score}/100` },
-        { title: 'Bugs', value: reviewData.bugs?.length ? reviewData.bugs.join(' • ') : 'No major issues detected' },
+        { title: 'Score', value: reviewData.score ?? 0 },
+        { title: 'Bugs', value: reviewData.bugs?.length ? reviewData.bugs : ['No major issues detected'] },
         { title: 'Performance', value: reviewData.performance || 'No issues detected' },
         { title: 'Security', value: reviewData.security || 'No issues detected' },
-        { title: 'Suggestions', value: reviewData.suggestions?.length ? reviewData.suggestions.join(' • ') : 'No suggestions' },
-        { title: 'Improved Code', value: reviewData.improvedCode ? reviewData.improvedCode.split('\n').slice(0, 2).join(' ') : 'No improved version provided' },
+        { title: 'Suggestions', value: reviewData.suggestions?.length ? reviewData.suggestions : ['No suggestions'] },
+        { title: 'Improved Code', value: reviewData.improvedCode || 'No improved version provided' },
       ]
 
       setResults(mappedResults)
@@ -86,6 +109,53 @@ function Home() {
     } finally {
       setIsGenerating(false)
     }
+  }
+
+  const renderResultContent = (item) => {
+    if (item.title === 'Score') {
+      const score = Number(item.value) || 0
+      const safeScore = Math.min(100, Math.max(0, score))
+
+      return (
+        <div className="score-display">
+          <div className="score-ring" style={{ '--score': `${safeScore}%` }}>
+            <span>{safeScore}</span>
+          </div>
+          <div className="score-meta">
+            <strong>{getScoreLabel(safeScore)}</strong>
+            <span>Overall code health</span>
+          </div>
+        </div>
+      )
+    }
+
+    if (item.title === 'Bugs' || item.title === 'Performance' || item.title === 'Security') {
+      const items = Array.isArray(item.value)
+        ? item.value
+        : String(item.value || 'No details available').split(' • ').filter(Boolean)
+
+      return (
+        <ul className="metric-list">
+          {items.map((entry, index) => (
+            <li key={`${item.title}-${index}`} className="metric-item">
+              {entry}
+            </li>
+          ))}
+        </ul>
+      )
+    }
+
+    if (item.title === 'Suggestions' || item.title === 'Improved Code') {
+      return (
+        <div className="markdown-block">
+          <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
+            {toMarkdownText(item.value)}
+          </ReactMarkdown>
+        </div>
+      )
+    }
+
+    return <p className="result-text">{item.value}</p>
   }
 
   return (
@@ -213,7 +283,7 @@ function Home() {
                   {results.map((item) => (
                     <div key={item.title} className="result-card">
                       <h3>{item.title}</h3>
-                      <p>{item.value}</p>
+                      {renderResultContent(item)}
                     </div>
                   ))}
                 </div>
