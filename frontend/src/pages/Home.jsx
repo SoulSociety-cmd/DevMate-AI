@@ -46,6 +46,29 @@ const getScoreLabel = (score) => {
   return 'High risk'
 }
 
+const buildReviewMarkdown = (results) => {
+  const sections = results.map((item) => {
+    const title = `## ${item.title}`
+
+    if (item.title === 'Score') {
+      return `${title}\n\n${String(item.value ?? '')}`
+    }
+
+    if (item.title === 'Bugs' || item.title === 'Performance' || item.title === 'Security') {
+      const entries = Array.isArray(item.value)
+        ? item.value
+        : String(item.value || 'No details available').split(' • ').filter(Boolean)
+
+      const body = entries.length ? entries.map((entry) => `- ${entry}`).join('\n') : '- No details available'
+      return `${title}\n\n${body}`
+    }
+
+    return `${title}\n\n${toMarkdownText(item.value) || 'No details available'}`
+  })
+
+  return ['# DevMate AI Review', '', ...sections].join('\n\n')
+}
+
 function Home() {
   const [activeLang, setActiveLang] = useState('Python')
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -60,6 +83,7 @@ function Home() {
     { role: 'assistant', text: 'Hello! I can review, explain, or improve your code.' },
   ])
   const [chatInput, setChatInput] = useState('')
+  const [copiedNotice, setCopiedNotice] = useState('')
 
   useEffect(() => {
     setCode(codeSamples[activeLang])
@@ -68,6 +92,49 @@ function Home() {
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
   }, [theme])
+
+  useEffect(() => {
+    if (!copiedNotice) {
+      return undefined
+    }
+
+    const timer = window.setTimeout(() => setCopiedNotice(''), 1800)
+    return () => window.clearTimeout(timer)
+  }, [copiedNotice])
+
+  const handleCopyContent = async (content, label = 'content') => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(content)
+      } else {
+        const textArea = document.createElement('textarea')
+        textArea.value = content
+        textArea.setAttribute('readonly', '')
+        textArea.style.position = 'fixed'
+        textArea.style.left = '-9999px'
+        document.body.appendChild(textArea)
+        textArea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textArea)
+      }
+
+      setCopiedNotice('Đã copy!')
+    } catch (error) {
+      setCopiedNotice('Không thể sao chép')
+    }
+  }
+
+  const handleDownloadContent = (content, filename) => {
+    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+  }
 
   const handleGenerate = async () => {
     if (!code.trim()) {
@@ -233,6 +300,10 @@ function Home() {
                   <p>{assistantMessage}</p>
                 </div>
 
+                <div className={`copy-toast ${copiedNotice ? 'visible' : ''}`} aria-live="polite">
+                  {copiedNotice}
+                </div>
+
                 <div className="chat-card">
                   <div className="chat-messages">
                     {chatMessages.map((message, index) => (
@@ -279,10 +350,42 @@ function Home() {
                 </div>
                 </div>
 
+                <div className="result-toolbar">
+                  <span className="result-toolbar__title">Export review output</span>
+                  <div className="result-toolbar__actions">
+                    <button type="button" className="result-action-btn" onClick={() => handleCopyContent(buildReviewMarkdown(results))}>
+                      Copy
+                    </button>
+                    <button type="button" className="result-action-btn" onClick={() => handleDownloadContent(buildReviewMarkdown(results), 'devmate-review.md')}>
+                      Download
+                    </button>
+                  </div>
+                </div>
+
                 <div className="result-grid">
                   {results.map((item) => (
                     <div key={item.title} className="result-card">
-                      <h3>{item.title}</h3>
+                      <div className="result-card-header">
+                        <h3>{item.title}</h3>
+                        {item.title === 'Improved Code' ? (
+                          <div className="result-card-actions">
+                            <button
+                              type="button"
+                              className="result-action-btn"
+                              onClick={() => handleCopyContent(`\n\n${toMarkdownText(item.value)}\n\n`, item.title)}
+                            >
+                              Copy
+                            </button>
+                            <button
+                              type="button"
+                              className="result-action-btn"
+                              onClick={() => handleDownloadContent(`\n\n${toMarkdownText(item.value)}\n\n`, 'devmate-improved-code.md')}
+                            >
+                              Download
+                            </button>
+                          </div>
+                        ) : null}
+                      </div>
                       {renderResultContent(item)}
                     </div>
                   ))}
