@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { analyzeCode } from '../services/api.js'
+import { reviewCode } from '../services/reviewService.js'
 import AppHeader from '../components/AppHeader.jsx'
 import AppSidebar from '../components/AppSidebar.jsx'
 import CodeEditor from '../components/CodeEditor.jsx'
@@ -15,12 +15,12 @@ const codeSamples = {
 }
 
 const initialResults = [
-  { title: 'Score', value: '92/100' },
-  { title: 'Bugs', value: '3 minor issues' },
-  { title: 'Performance', value: 'Optimized' },
-  { title: 'Security', value: 'Secure' },
-  { title: 'Suggestions', value: '5 actionable tips' },
-  { title: 'Improved Code', value: 'Ready to review' },
+  { title: 'Score', value: 'Awaiting review' },
+  { title: 'Bugs', value: 'Pending' },
+  { title: 'Performance', value: 'Pending' },
+  { title: 'Security', value: 'Pending' },
+  { title: 'Suggestions', value: 'Pending' },
+  { title: 'Improved Code', value: 'Pending' },
 ]
 
 function Home() {
@@ -30,6 +30,7 @@ function Home() {
   const [code, setCode] = useState(codeSamples.Python)
   const [results, setResults] = useState(initialResults)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
   const [prompt, setPrompt] = useState('Improve this code and explain the changes.')
   const [assistantMessage, setAssistantMessage] = useState('Your AI review will appear here with focused suggestions.')
   const [chatMessages, setChatMessages] = useState([
@@ -46,21 +47,42 @@ function Home() {
   }, [theme])
 
   const handleGenerate = async () => {
+    if (!code.trim()) {
+      setErrorMessage('Please enter some code before generating a review.')
+      return
+    }
+
     setIsGenerating(true)
+    setErrorMessage('')
 
     try {
-      const response = await analyzeCode({ code, language: activeLang, prompt })
-      const { results: apiResults, assistantMessage: apiAssistantMessage } = response.data
+      const response = await reviewCode({ code, language: activeLang })
+      const reviewData = response?.data?.data
 
-      setResults(apiResults)
-      setAssistantMessage(apiAssistantMessage)
+      if (!reviewData) {
+        throw new Error('The review service returned an empty response.')
+      }
+
+      const mappedResults = [
+        { title: 'Score', value: `${reviewData.score}/100` },
+        { title: 'Bugs', value: reviewData.bugs?.length ? reviewData.bugs.join(' • ') : 'No major issues detected' },
+        { title: 'Performance', value: reviewData.performance || 'No issues detected' },
+        { title: 'Security', value: reviewData.security || 'No issues detected' },
+        { title: 'Suggestions', value: reviewData.suggestions?.length ? reviewData.suggestions.join(' • ') : 'No suggestions' },
+        { title: 'Improved Code', value: reviewData.improvedCode ? reviewData.improvedCode.split('\n').slice(0, 2).join(' ') : 'No improved version provided' },
+      ]
+
+      setResults(mappedResults)
+      setAssistantMessage(reviewData.improvedCode ? 'Review complete. The improved version and recommendations are ready.' : 'Review complete. No improved code was generated.')
       setChatMessages((prev) => [
         ...prev,
         { role: 'user', text: prompt || 'Improve this code' },
-        { role: 'assistant', text: apiAssistantMessage },
+        { role: 'assistant', text: reviewData.improvedCode || 'Review completed.' },
       ])
     } catch (error) {
-      setAssistantMessage('Unable to reach the backend. Please make sure the API server is running.')
+      const message = error?.response?.data?.error || error?.message || 'Unable to reach the backend. Please make sure the API server is running.'
+      setErrorMessage(message)
+      setAssistantMessage('The review could not be completed. Please try again in a moment.')
     } finally {
       setIsGenerating(false)
     }
@@ -121,9 +143,15 @@ function Home() {
                   />
                 </div>
 
-                <button type="button" className="generate-button" onClick={handleGenerate}>
+                <button type="button" className="generate-button" onClick={handleGenerate} disabled={isGenerating}>
                   {isGenerating ? 'Generating...' : 'Generate'}
                 </button>
+
+                {errorMessage ? (
+                  <div className="error-banner" role="alert">
+                    {errorMessage}
+                  </div>
+                ) : null}
 
                 <div className="result-summary">
                   <h2>AI Analysis</h2>
