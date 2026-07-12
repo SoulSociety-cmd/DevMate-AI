@@ -5,8 +5,19 @@ const api = axios.create({
   timeout: 20000,
 })
 
+const languageMap = {
+  cplusplus: 'cpp',
+  'c++': 'cpp',
+  cpp: 'cpp',
+  python: 'python',
+  java: 'java',
+  javascript: 'javascript',
+  js: 'javascript',
+}
+
 export const reviewCode = async ({ code, language }) => {
-  const normalizedLanguage = typeof language === 'string' ? language.trim().toLowerCase() : ''
+  const rawLanguage = typeof language === 'string' ? language.trim() : ''
+  const normalizedLanguage = languageMap[rawLanguage.toLowerCase()] || rawLanguage.toLowerCase()
 
   return api.post('/api/review', {
     code,

@@ -80,7 +80,7 @@ function Home() {
         { role: 'assistant', text: reviewData.improvedCode || 'Review completed.' },
       ])
     } catch (error) {
-      const message = error?.response?.data?.error || error?.message || 'Unable to reach the backend. Please make sure the API server is running.'
+      const message = error?.response?.data?.message || error?.response?.data?.error || error?.message || 'Unable to reach the backend. Please make sure the API server is running.'
       setErrorMessage(message)
       setAssistantMessage('The review could not be completed. Please try again in a moment.')
     } finally {
@@ -144,7 +144,7 @@ function Home() {
                 </div>
 
                 <button type="button" className="generate-button" onClick={handleGenerate} disabled={isGenerating}>
-                  {isGenerating ? 'Generating...' : 'Generate'}
+                  {isGenerating ? <><span className="spinner" aria-hidden="true" />Generating...</> : 'Generate'}
                 </button>
 
                 {errorMessage ? (
