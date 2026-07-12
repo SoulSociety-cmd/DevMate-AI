@@ -1,9 +1,9 @@
-import { generateMockReview } from '../services/reviewService.js'
+import { analyzeCodeWithGemini } from '../services/geminiService.js'
 
-export const reviewCode = (req, res, next) => {
+export const reviewCode = async (req, res, next) => {
   try {
     const { code, language } = req.body
-    const reviewData = generateMockReview({ code, language })
+    const reviewData = await analyzeCodeWithGemini({ code, language })
 
     res.status(200).json({
       success: true,
