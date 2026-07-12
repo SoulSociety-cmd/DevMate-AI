@@ -15,7 +15,7 @@ const placeholders = {
   JavaScript: `function greet(name) {\n  return \`Hello, \${name}\`;\n}\n\nconsole.log(greet('DevMate AI'))`,
 }
 
-function CodeEditor({ language = 'Python', value = '', onChange, theme = 'dark' }) {
+function CodeEditor({ language = 'Python', value = '', onChange, theme = 'dark', disabled = false }) {
   const [isFocused, setIsFocused] = useState(false)
   const [editorValue, setEditorValue] = useState(value)
   const editorRef = useRef(null)
@@ -52,7 +52,7 @@ function CodeEditor({ language = 'Python', value = '', onChange, theme = 'dark' 
         <span>{language} Editor</span>
         <div className="editor-toolbar-actions">
           <span className="editor-pill">AI-ready</span>
-          <button type="button" className="clear-button" onClick={handleClear}>
+          <button type="button" className="clear-button" onClick={handleClear} disabled={disabled}>
             Clear
           </button>
         </div>
@@ -74,6 +74,7 @@ function CodeEditor({ language = 'Python', value = '', onChange, theme = 'dark' 
             automaticLayout: true,
             padding: { top: 12, bottom: 12 },
             wordWrap: 'on',
+            readOnly: disabled,
           }}
         />
 

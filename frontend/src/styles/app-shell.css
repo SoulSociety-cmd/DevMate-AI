@@ -228,6 +228,16 @@ button {
   border-color: rgba(109, 93, 252, 0.45);
 }
 
+.lang-tab:disabled,
+.prompt-box textarea:disabled,
+.chat-input-row input:disabled,
+.chat-send:disabled,
+.result-action-btn:disabled,
+.clear-button:disabled {
+  opacity: 0.62;
+  cursor: not-allowed;
+}
+
 .editor-card {
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -339,6 +349,16 @@ button {
   }
 }
 
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
 .prompt-box {
   margin: 1rem 0 0.7rem;
   display: flex;
@@ -392,6 +412,77 @@ button {
 .assistant-card p {
   margin: 0;
   color: var(--muted);
+}
+
+.loading-progress {
+  margin-bottom: 0.85rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.loading-progress__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.6rem;
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.loading-progress__bar {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.loading-progress__fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), #8b5cf6);
+  transition: width 0.35s ease;
+  animation: shimmer 1.1s linear infinite;
+}
+
+.loading-skeleton-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.skeleton-card {
+  min-height: 120px;
+}
+
+.skeleton-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.skeleton-line {
+  height: 0.8rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.16) 50%, rgba(255, 255, 255, 0.06) 100%);
+  background-size: 220% 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+
+.skeleton-line--short {
+  width: 55%;
+}
+
+.skeleton-line--medium {
+  width: 80%;
+}
+
+.skeleton-line--title {
+  width: 45%;
+  height: 0.95rem;
 }
 
 .chat-card {

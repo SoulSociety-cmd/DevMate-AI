@@ -10,6 +10,7 @@ import CodeEditor from '../components/CodeEditor.jsx'
 import '../styles/app-shell.css'
 
 const languages = ['C++', 'Python', 'Java', 'JavaScript']
+const loadingStages = ['Đang phân tích code...', 'Đang kiểm tra bảo mật...', 'Đang tối ưu...']
 
 const codeSamples = {
   'C++': `#include <iostream>\n\nint main() {\n    std::cout << "Hello DevMate AI" << std::endl;\n    return 0;\n}`,
@@ -76,6 +77,7 @@ function Home() {
   const [code, setCode] = useState(codeSamples.Python)
   const [results, setResults] = useState(initialResults)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [loadingStep, setLoadingStep] = useState(0)
   const [errorMessage, setErrorMessage] = useState('')
   const [prompt, setPrompt] = useState('Improve this code and explain the changes.')
   const [assistantMessage, setAssistantMessage] = useState('Your AI review will appear here with focused suggestions.')
@@ -101,6 +103,19 @@ function Home() {
     const timer = window.setTimeout(() => setCopiedNotice(''), 1800)
     return () => window.clearTimeout(timer)
   }, [copiedNotice])
+
+  useEffect(() => {
+    if (!isGenerating) {
+      setLoadingStep(0)
+      return undefined
+    }
+
+    const timer = window.setInterval(() => {
+      setLoadingStep((prev) => (prev + 1) % loadingStages.length)
+    }, 1200)
+
+    return () => window.clearInterval(timer)
+  }, [isGenerating])
 
   const handleCopyContent = async (content, label = 'content') => {
     try {
@@ -142,6 +157,7 @@ function Home() {
       return
     }
 
+    setLoadingStep(0)
     setIsGenerating(true)
     setErrorMessage('')
 
@@ -250,6 +266,7 @@ function Home() {
                   type="button"
                   className={`lang-tab ${activeLang === lang ? 'active' : ''}`}
                   onClick={() => setActiveLang(lang)}
+                  disabled={isGenerating}
                 >
                   {lang}
                 </button>
@@ -264,6 +281,7 @@ function Home() {
                     value={code}
                     onChange={(value) => setCode(value ?? '')}
                     theme={theme}
+                    disabled={isGenerating}
                   />
                 </div>
               </div>
@@ -277,6 +295,7 @@ function Home() {
                     onChange={(event) => setPrompt(event.target.value)}
                     rows="3"
                     placeholder="Ask for review, explanation, bug fixing, or optimization..."
+                    disabled={isGenerating}
                   />
                 </div>
 
@@ -292,12 +311,34 @@ function Home() {
 
                 <div className="result-summary">
                   <h2>AI Analysis</h2>
-                  <p>{isGenerating ? 'Reviewing your code...' : 'Your latest review is ready.'}</p>
+                  <p>{isGenerating ? loadingStages[loadingStep] : 'Your latest review is ready.'}</p>
                 </div>
 
+                {isGenerating ? (
+                  <div className="loading-progress" aria-live="polite">
+                    <div className="loading-progress__header">
+                      <span>{loadingStages[loadingStep]}</span>
+                      <span>{loadingStep + 1}/{loadingStages.length}</span>
+                    </div>
+                    <div className="loading-progress__bar">
+                      <div className="loading-progress__fill" style={{ width: `${((loadingStep + 1) / loadingStages.length) * 100}%` }} />
+                    </div>
+                  </div>
+                ) : null}
+
                 <div className="assistant-card">
-                  <h3>Assistant response</h3>
-                  <p>{assistantMessage}</p>
+                  {isGenerating ? (
+                    <div className="loading-skeleton-block" aria-hidden="true">
+                      <div className="skeleton-line skeleton-line--short" />
+                      <div className="skeleton-line" />
+                      <div className="skeleton-line skeleton-line--medium" />
+                    </div>
+                  ) : (
+                    <>
+                      <h3>Assistant response</h3>
+                      <p>{assistantMessage}</p>
+                    </>
+                  )}
                 </div>
 
                 <div className={`copy-toast ${copiedNotice ? 'visible' : ''}`} aria-live="polite">
@@ -314,12 +355,29 @@ function Home() {
                   </div>
                   <div className="chat-input-row">
                     <input
-                    type="text"
-                    value={chatInput}
-                    onChange={(event) => setChatInput(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' && !event.shiftKey) {
-                        event.preventDefault()
+                      type="text"
+                      value={chatInput}
+                      onChange={(event) => setChatInput(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' && !event.shiftKey) {
+                          event.preventDefault()
+                          const message = chatInput.trim() || 'Tell me more about the code.'
+                          setChatMessages((prev) => [
+                            ...prev,
+                            { role: 'user', text: message },
+                            { role: 'assistant', text: `I analyzed your request: ${message}. Here's a concise follow-up based on the current code.` },
+                          ])
+                          setChatInput('')
+                        }
+                      }}
+                      aria-label="Chat message"
+                      placeholder="Ask the assistant a follow-up question..."
+                      disabled={isGenerating}
+                    />
+                    <button
+                      type="button"
+                      className="chat-send"
+                      onClick={() => {
                         const message = chatInput.trim() || 'Tell me more about the code.'
                         setChatMessages((prev) => [
                           ...prev,
@@ -327,27 +385,12 @@ function Home() {
                           { role: 'assistant', text: `I analyzed your request: ${message}. Here's a concise follow-up based on the current code.` },
                         ])
                         setChatInput('')
-                      }
-                    }}
-                    aria-label="Chat message"
-                    placeholder="Ask the assistant a follow-up question..."
-                  />
-                  <button
-                    type="button"
-                    className="chat-send"
-                    onClick={() => {
-                      const message = chatInput.trim() || 'Tell me more about the code.'
-                      setChatMessages((prev) => [
-                        ...prev,
-                        { role: 'user', text: message },
-                        { role: 'assistant', text: `I analyzed your request: ${message}. Here's a concise follow-up based on the current code.` },
-                      ])
-                      setChatInput('')
-                    }}
-                  >
-                    Send
-                  </button>
-                </div>
+                      }}
+                      disabled={isGenerating}
+                    >
+                      Send
+                    </button>
+                  </div>
                 </div>
 
                 <div className="result-toolbar">
@@ -363,32 +406,45 @@ function Home() {
                 </div>
 
                 <div className="result-grid">
-                  {results.map((item) => (
-                    <div key={item.title} className="result-card">
-                      <div className="result-card-header">
-                        <h3>{item.title}</h3>
-                        {item.title === 'Improved Code' ? (
-                          <div className="result-card-actions">
-                            <button
-                              type="button"
-                              className="result-action-btn"
-                              onClick={() => handleCopyContent(`\n\n${toMarkdownText(item.value)}\n\n`, item.title)}
-                            >
-                              Copy
-                            </button>
-                            <button
-                              type="button"
-                              className="result-action-btn"
-                              onClick={() => handleDownloadContent(`\n\n${toMarkdownText(item.value)}\n\n`, 'devmate-improved-code.md')}
-                            >
-                              Download
-                            </button>
-                          </div>
-                        ) : null}
+                  {isGenerating ? (
+                    Array.from({ length: 6 }).map((_, index) => (
+                      <div key={`skeleton-${index}`} className="result-card skeleton-card" aria-hidden="true">
+                        <div className="skeleton-line skeleton-line--title" />
+                        <div className="skeleton-block">
+                          <div className="skeleton-line" />
+                          <div className="skeleton-line skeleton-line--medium" />
+                          <div className="skeleton-line skeleton-line--short" />
+                        </div>
                       </div>
-                      {renderResultContent(item)}
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    results.map((item) => (
+                      <div key={item.title} className="result-card">
+                        <div className="result-card-header">
+                          <h3>{item.title}</h3>
+                          {item.title === 'Improved Code' ? (
+                            <div className="result-card-actions">
+                              <button
+                                type="button"
+                                className="result-action-btn"
+                                onClick={() => handleCopyContent(`\n\n${toMarkdownText(item.value)}\n\n`, item.title)}
+                              >
+                                Copy
+                              </button>
+                              <button
+                                type="button"
+                                className="result-action-btn"
+                                onClick={() => handleDownloadContent(`\n\n${toMarkdownText(item.value)}\n\n`, 'devmate-improved-code.md')}
+                              >
+                                Download
+                              </button>
+                            </div>
+                          ) : null}
+                        </div>
+                        {renderResultContent(item)}
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>
