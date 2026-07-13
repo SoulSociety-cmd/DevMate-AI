@@ -48,33 +48,32 @@ const normalizeReviewPayload = (payload) => {
   }
 }
 
-export const analyzeCodeWithGemini = async ({ code = '', language = 'javascript' }) => {
-  const apiKey = process.env.GEMINI_API_KEY
+const buildGeminiModel = (apiKey, systemInstruction) => {
+  const genAI = new GoogleGenerativeAI(apiKey)
+  return genAI.getGenerativeModel({
+    model: DEFAULT_MODEL,
+    systemInstruction,
+    generationConfig: {
+      temperature: 0.2,
+      responseMimeType: 'application/json',
+    },
+  })
+}
 
+const callGemini = async ({ apiKey, prompt, systemInstruction }) => {
   if (!apiKey) {
     const error = new Error('GEMINI_API_KEY is not configured.')
     error.statusCode = 500
     throw error
   }
 
-  if (!code?.trim()) {
-    const error = new Error('Code snippet is required for review.')
+  if (!prompt?.trim()) {
+    const error = new Error('Code snippet is required for analysis.')
     error.statusCode = 400
     throw error
   }
 
-  const genAI = new GoogleGenerativeAI(apiKey)
-  const model = genAI.getGenerativeModel({
-    model: DEFAULT_MODEL,
-    systemInstruction: `You are a senior code reviewer. Analyze the provided code and return ONLY a JSON object with this exact schema: { "score": number (0-100), "bugs": string[], "performance": string, "security": string, "suggestions": string[], "improvedCode": string }. Do not include markdown, explanations, or extra keys. Keep the content concise and actionable.`,
-    generationConfig: {
-      temperature: 0.2,
-      responseMimeType: 'application/json',
-    },
-  })
-
-  const prompt = `Language: ${language}\n\nCode:\n${code}`
-
+  const model = buildGeminiModel(apiKey, systemInstruction)
   let timeoutId
 
   try {
@@ -90,18 +89,7 @@ export const analyzeCodeWithGemini = async ({ code = '', language = 'javascript'
     const result = await Promise.race([responsePromise, timeoutPromise])
     const response = await result.response
     const rawText = response.text()
-    const cleanedText = stripMarkdownJson(rawText)
-
-    let parsedPayload
-    try {
-      parsedPayload = JSON.parse(cleanedText)
-    } catch (parseError) {
-      const error = new Error(`Gemini returned invalid JSON: ${parseError.message}`)
-      error.statusCode = 502
-      throw error
-    }
-
-    return normalizeReviewPayload(parsedPayload)
+    return stripMarkdownJson(rawText)
   } catch (error) {
     if (error?.statusCode) {
       throw error
@@ -114,5 +102,63 @@ export const analyzeCodeWithGemini = async ({ code = '', language = 'javascript'
     if (timeoutId) {
       clearTimeout(timeoutId)
     }
+  }
+}
+
+export const analyzeCodeWithGemini = async ({ code = '', language = 'javascript' }) => {
+  const apiKey = process.env.GEMINI_API_KEY
+
+  if (!code?.trim()) {
+    const error = new Error('Code snippet is required for review.')
+    error.statusCode = 400
+    throw error
+  }
+
+  const systemInstruction = `You are a senior code reviewer. Analyze the provided code and return ONLY a JSON object with this exact schema: { "score": number (0-100), "bugs": string[], "performance": string, "security": string, "suggestions": string[], "improvedCode": string }. Do not include markdown, explanations, or extra keys. Keep the content concise and actionable.`
+  const prompt = `Language: ${language}\n\nCode:\n${code}`
+  const cleanedText = await callGemini({ apiKey, prompt, systemInstruction })
+
+  let parsedPayload
+  try {
+    parsedPayload = JSON.parse(cleanedText)
+  } catch (parseError) {
+    const error = new Error(`Gemini returned invalid JSON: ${parseError.message}`)
+    error.statusCode = 502
+    throw error
+  }
+
+  return normalizeReviewPayload(parsedPayload)
+}
+
+export const explainCodeWithGemini = async ({ code = '', language = 'javascript' }) => {
+  const apiKey = process.env.GEMINI_API_KEY
+
+  if (!code?.trim()) {
+    const error = new Error('Code snippet is required for explanation.')
+    error.statusCode = 400
+    throw error
+  }
+
+  const systemInstruction = `You are a patient coding tutor for beginners. Explain the provided code step by step in simple language. Return ONLY a JSON object with this exact schema: { "explanation": string }. The explanation value must be a markdown string with headings and bullet points, easy for beginners to follow.`
+  const prompt = `Language: ${language}\n\nCode:\n${code}`
+  const cleanedText = await callGemini({ apiKey, prompt, systemInstruction })
+
+  let parsedPayload
+  try {
+    parsedPayload = JSON.parse(cleanedText)
+  } catch (parseError) {
+    const error = new Error(`Gemini returned invalid JSON: ${parseError.message}`)
+    error.statusCode = 502
+    throw error
+  }
+
+  if (typeof parsedPayload?.explanation !== 'string' || !parsedPayload.explanation.trim()) {
+    const error = new Error('Gemini returned an invalid explanation payload format.')
+    error.statusCode = 502
+    throw error
+  }
+
+  return {
+    explanation: parsedPayload.explanation,
   }
 }

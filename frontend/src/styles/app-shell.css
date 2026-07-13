@@ -742,8 +742,18 @@ button {
 
 .markdown-block p,
 .markdown-block ul,
-.markdown-block ol {
+.markdown-block ol,
+.markdown-block h1,
+.markdown-block h2,
+.markdown-block h3,
+.markdown-block h4 {
   margin: 0 0 0.6rem;
+}
+
+.markdown-block h2,
+.markdown-block h3,
+.markdown-block h4 {
+  color: var(--text);
 }
 
 .markdown-block ul,
