@@ -20,6 +20,29 @@ const stripMarkdownJson = (rawText = '') => {
   return trimmed
 }
 
+export const normalizeFixBugsPayload = (payload) => {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    throw new Error('Gemini returned an invalid fix-bugs payload format.')
+  }
+
+  const bugsFound = Array.isArray(payload.bugsFound)
+    ? payload.bugsFound.filter(Boolean).map((item) => String(item))
+    : []
+
+  const fixedCode = typeof payload.fixedCode === 'string' ? payload.fixedCode : ''
+  const explanation = typeof payload.explanation === 'string' ? payload.explanation : ''
+
+  if (!bugsFound.length && !fixedCode.trim() && !explanation.trim()) {
+    throw new Error('Gemini returned an invalid fix-bugs payload format.')
+  }
+
+  return {
+    bugsFound,
+    fixedCode,
+    explanation,
+  }
+}
+
 const normalizeReviewPayload = (payload) => {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
     throw new Error('Gemini returned an invalid review payload format.')
@@ -161,4 +184,29 @@ export const explainCodeWithGemini = async ({ code = '', language = 'javascript'
   return {
     explanation: parsedPayload.explanation,
   }
+}
+
+export const fixBugsWithGemini = async ({ code = '', language = 'javascript' }) => {
+  const apiKey = process.env.GEMINI_API_KEY
+
+  if (!code?.trim()) {
+    const error = new Error('Code snippet is required for bug fixing.')
+    error.statusCode = 400
+    throw error
+  }
+
+  const systemInstruction = `You are a senior debugging engineer. Analyze the provided code, identify likely bugs, and return ONLY a JSON object with this exact schema: { "bugsFound": string[], "fixedCode": string, "explanation": string }. Keep the explanation concise and actionable.`
+  const prompt = `Language: ${language}\n\nCode:\n${code}`
+  const cleanedText = await callGemini({ apiKey, prompt, systemInstruction })
+
+  let parsedPayload
+  try {
+    parsedPayload = JSON.parse(cleanedText)
+  } catch (parseError) {
+    const error = new Error(`Gemini returned invalid JSON: ${parseError.message}`)
+    error.statusCode = 502
+    throw error
+  }
+
+  return normalizeFixBugsPayload(parsedPayload)
 }

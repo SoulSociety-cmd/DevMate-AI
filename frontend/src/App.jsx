@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 import Home from './pages/Home.jsx'
 import Explain from './pages/Explain.jsx'
+import FixBugs from './pages/FixBugs.jsx'
 import './styles/global.css'
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/explain" element={<Explain />} />
+        <Route path="/fix-bugs" element={<FixBugs />} />
       </Routes>
     </BrowserRouter>
   )

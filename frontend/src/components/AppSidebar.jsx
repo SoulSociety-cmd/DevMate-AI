@@ -15,7 +15,7 @@ const navItems = [
   { label: 'Home', icon: House, to: '/' },
   { label: 'Review', icon: FileCode2, to: '/' },
   { label: 'Explain', icon: BookOpenText, to: '/explain' },
-  { label: 'Fix Bugs', icon: Bug, to: '/' },
+  { label: 'Fix Bugs', icon: Bug, to: '/fix-bugs' },
   { label: 'Optimize', icon: Sparkles, to: '/' },
   { label: 'Convert', icon: ArrowRightLeft, to: '/' },
   { label: 'Docs', icon: BookOpenText, to: '/' },
