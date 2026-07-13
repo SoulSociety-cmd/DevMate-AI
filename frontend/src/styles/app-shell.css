@@ -1,26 +1,38 @@
 :root {
   color-scheme: dark;
   --bg: #050816;
+  --page-bg: linear-gradient(135deg, #020617 0%, #0f172a 100%);
+  --sidebar-bg: rgba(9, 14, 29, 0.95);
+  --header-bg: rgba(7, 12, 24, 0.95);
   --panel: #0f172a;
   --panel-strong: #111827;
+  --surface-bg: #020617;
+  --surface-soft: rgba(255, 255, 255, 0.03);
   --border: #243047;
   --text: #e2e8f0;
   --muted: #94a3b8;
   --accent: #6d5dfc;
   --accent-soft: rgba(109, 93, 252, 0.2);
+  --input-bg: rgba(255, 255, 255, 0.04);
   --success: #22c55e;
 }
 
 :root[data-theme='light'] {
   color-scheme: light;
   --bg: #f5f7ff;
-  --panel: #ffffff;
-  --panel-strong: #f8faff;
+  --page-bg: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  --sidebar-bg: rgba(255, 255, 255, 0.94);
+  --header-bg: rgba(255, 255, 255, 0.92);
+  --panel: #f8faff;
+  --panel-strong: #e2e8ff;
+  --surface-bg: #ffffff;
+  --surface-soft: rgba(15, 23, 42, 0.06);
   --border: #dfe7ff;
   --text: #111827;
   --muted: #64748b;
   --accent: #5b4cff;
   --accent-soft: rgba(91, 76, 255, 0.12);
+  --input-bg: rgba(15, 23, 42, 0.05);
   --success: #16a34a;
 }
 
@@ -29,7 +41,7 @@
 }
 
 body {
-  background: linear-gradient(135deg, #020617 0%, #0f172a 100%);
+  background: var(--page-bg);
   color: var(--text);
 }
 
@@ -62,7 +74,7 @@ button {
   width: 250px;
   min-height: 100vh;
   padding: 1.25rem 1rem;
-  background: rgba(9, 14, 29, 0.95);
+  background: var(--sidebar-bg);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -149,7 +161,7 @@ button {
   align-items: center;
   padding: 1rem 1.5rem;
   border-bottom: 1px solid var(--border);
-  background: rgba(7, 12, 24, 0.95);
+  background: var(--header-bg);
   backdrop-filter: blur(12px);
 }
 
@@ -243,7 +255,7 @@ button {
   border-radius: 16px;
   overflow: hidden;
   min-height: 320px;
-  background: #020617;
+  background: var(--surface-bg);
 }
 
 .code-editor-shell {
@@ -378,7 +390,7 @@ button {
   padding: 0.8rem 0.9rem;
   border-radius: 12px;
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--input-bg);
   color: var(--text);
 }
 
@@ -401,7 +413,7 @@ button {
   padding: 0.95rem 1rem;
   border-radius: 14px;
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--surface-soft);
 }
 
 .assistant-card h3 {
@@ -419,7 +431,7 @@ button {
   padding: 0.8rem 0.9rem;
   border-radius: 14px;
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--surface-soft);
 }
 
 .loading-progress__header {
@@ -489,7 +501,7 @@ button {
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 0.8rem;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--surface-soft);
   display: flex;
   flex-direction: column;
   gap: 0.85rem;

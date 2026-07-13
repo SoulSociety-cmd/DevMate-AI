@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import Editor from '@monaco-editor/react'
+import { useTheme } from '../context/ThemeContext.jsx'
 
 const languageMap = {
   'C++': 'cpp',
@@ -15,7 +16,8 @@ const placeholders = {
   JavaScript: `function greet(name) {\n  return \`Hello, \${name}\`;\n}\n\nconsole.log(greet('DevMate AI'))`,
 }
 
-function CodeEditor({ language = 'Python', value = '', onChange, theme = 'dark', disabled = false }) {
+function CodeEditor({ language = 'Python', value = '', onChange, disabled = false }) {
+  const { theme } = useTheme()
   const [isFocused, setIsFocused] = useState(false)
   const [editorValue, setEditorValue] = useState(value)
   const editorRef = useRef(null)

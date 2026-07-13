@@ -1,6 +1,9 @@
 import { Menu, MoonStar, SunMedium } from 'lucide-react'
+import { useTheme } from '../context/ThemeContext.jsx'
 
-function AppHeader({ onToggleSidebar, theme, onToggleTheme }) {
+function AppHeader({ onToggleSidebar }) {
+  const { theme, toggleTheme } = useTheme()
+
   return (
     <header className="app-header">
       <div className="header-left">
@@ -26,7 +29,7 @@ function AppHeader({ onToggleSidebar, theme, onToggleTheme }) {
         className="theme-toggle"
         aria-label="Theme toggle"
         aria-pressed={theme === 'light'}
-        onClick={onToggleTheme}
+        onClick={toggleTheme}
       >
         {theme === 'dark' ? <MoonStar size={16} /> : <SunMedium size={16} />}
         <span>{theme === 'dark' ? 'Dark mode' : 'Light mode'}</span>

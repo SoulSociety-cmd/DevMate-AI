@@ -7,6 +7,7 @@ import { reviewCode } from '../services/reviewService.js'
 import AppHeader from '../components/AppHeader.jsx'
 import AppSidebar from '../components/AppSidebar.jsx'
 import CodeEditor from '../components/CodeEditor.jsx'
+import { useTheme } from '../context/ThemeContext.jsx'
 import '../styles/app-shell.css'
 
 const languages = ['C++', 'Python', 'Java', 'JavaScript']
@@ -73,7 +74,7 @@ const buildReviewMarkdown = (results) => {
 function Home() {
   const [activeLang, setActiveLang] = useState('Python')
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [theme, setTheme] = useState('dark')
+  const { theme, toggleTheme } = useTheme()
   const [code, setCode] = useState(codeSamples.Python)
   const [results, setResults] = useState(initialResults)
   const [isGenerating, setIsGenerating] = useState(false)
@@ -90,10 +91,6 @@ function Home() {
   useEffect(() => {
     setCode(codeSamples[activeLang])
   }, [activeLang])
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme)
-  }, [theme])
 
   useEffect(() => {
     if (!copiedNotice) {
@@ -253,8 +250,6 @@ function Home() {
       <div className="dashboard-main">
         <AppHeader
           onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
-          theme={theme}
-          onToggleTheme={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
         />
 
         <main className="workspace-content">
