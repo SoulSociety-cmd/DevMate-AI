@@ -71,6 +71,28 @@ const normalizeReviewPayload = (payload) => {
   }
 }
 
+const normalizeOptimizePayload = (payload) => {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    throw new Error('Gemini returned an invalid optimize payload format.')
+  }
+
+  const optimizedCode = typeof payload.optimizedCode === 'string' ? payload.optimizedCode : ''
+  const improvements = Array.isArray(payload.improvements)
+    ? payload.improvements.filter(Boolean).map((item) => String(item))
+    : []
+  const performanceGain = typeof payload.performanceGain === 'string' ? payload.performanceGain : ''
+
+  if (!optimizedCode.trim() || !improvements.length || !performanceGain.trim()) {
+    throw new Error('Gemini returned an invalid optimize payload format.')
+  }
+
+  return {
+    optimizedCode,
+    improvements,
+    performanceGain,
+  }
+}
+
 const buildGeminiModel = (apiKey, systemInstruction) => {
   const genAI = new GoogleGenerativeAI(apiKey)
   return genAI.getGenerativeModel({
@@ -210,3 +232,29 @@ export const fixBugsWithGemini = async ({ code = '', language = 'javascript' }) 
 
   return normalizeFixBugsPayload(parsedPayload)
 }
+
+export const optimizeCodeWithGemini = async ({ code = '', language = 'javascript' }) => {
+  const apiKey = process.env.GEMINI_API_KEY
+
+  if (!code?.trim()) {
+    const error = new Error('Code snippet is required for optimization.')
+    error.statusCode = 400
+    throw error
+  }
+
+  const systemInstruction = `You are a senior performance engineer and optimization specialist. Analyze the provided code and return ONLY a JSON object with this exact schema: { "optimizedCode": string, "improvements": string[], "performanceGain": string }. The optimizedCode should be a fully working, optimized version. Improvements should be an array of specific optimizations made. PerformanceGain should describe the expected performance improvement. Keep all content concise and actionable.`
+  const prompt = `Language: ${language}\n\nCode:\n${code}`
+  const cleanedText = await callGemini({ apiKey, prompt, systemInstruction })
+
+  let parsedPayload
+  try {
+    parsedPayload = JSON.parse(cleanedText)
+  } catch (parseError) {
+    const error = new Error(`Gemini returned invalid JSON: ${parseError.message}`)
+    error.statusCode = 502
+    throw error
+  }
+
+  return normalizeOptimizePayload(parsedPayload)
+}
+
