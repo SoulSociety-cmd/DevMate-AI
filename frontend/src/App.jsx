@@ -3,6 +3,7 @@ import Home from './pages/Home.jsx'
 import Explain from './pages/Explain.jsx'
 import FixBugs from './pages/FixBugs.jsx'
 import Optimize from './pages/Optimize.jsx'
+import Convert from './pages/Convert.jsx'
 import './styles/global.css'
 
 function App() {
@@ -12,12 +13,14 @@ function App() {
         <Link to="/">Home</Link>
         <Link to="/explain">Explain</Link>
         <Link to="/optimize">Optimize</Link>
+        <Link to="/convert">Convert</Link>
       </nav>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/explain" element={<Explain />} />
         <Route path="/fix-bugs" element={<FixBugs />} />
         <Route path="/optimize" element={<Optimize />} />
+        <Route path="/convert" element={<Convert />} />
       </Routes>
     </BrowserRouter>
   )

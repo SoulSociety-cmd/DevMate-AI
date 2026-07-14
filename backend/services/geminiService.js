@@ -93,6 +93,26 @@ const normalizeOptimizePayload = (payload) => {
   }
 }
 
+export const normalizeConvertPayload = (payload) => {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    throw new Error('Gemini returned an invalid convert payload format.')
+  }
+
+  const convertedCode = typeof payload.convertedCode === 'string' ? payload.convertedCode : ''
+  const notes = Array.isArray(payload.notes)
+    ? payload.notes.filter(Boolean).map((item) => String(item))
+    : []
+
+  if (!convertedCode.trim() || !notes.length) {
+    throw new Error('Gemini returned an invalid convert payload format.')
+  }
+
+  return {
+    convertedCode,
+    notes,
+  }
+}
+
 const buildGeminiModel = (apiKey, systemInstruction) => {
   const genAI = new GoogleGenerativeAI(apiKey)
   return genAI.getGenerativeModel({
@@ -256,5 +276,30 @@ export const optimizeCodeWithGemini = async ({ code = '', language = 'javascript
   }
 
   return normalizeOptimizePayload(parsedPayload)
+}
+
+export const convertCodeWithGemini = async ({ code = '', language = 'javascript', targetLanguage = 'python' }) => {
+  const apiKey = process.env.GEMINI_API_KEY
+
+  if (!code?.trim()) {
+    const error = new Error('Code snippet is required for conversion.')
+    error.statusCode = 400
+    throw error
+  }
+
+  const systemInstruction = `You are a polyglot software engineer. Translate the provided code to the requested target language while preserving intent and keeping it runnable. Return ONLY a JSON object with this exact schema: { "convertedCode": string, "notes": string[] }. Keep the notes concise and useful.`
+  const prompt = `Source Language: ${language}\nTarget Language: ${targetLanguage}\n\nCode:\n${code}`
+  const cleanedText = await callGemini({ apiKey, prompt, systemInstruction })
+
+  let parsedPayload
+  try {
+    parsedPayload = JSON.parse(cleanedText)
+  } catch (parseError) {
+    const error = new Error(`Gemini returned invalid JSON: ${parseError.message}`)
+    error.statusCode = 502
+    throw error
+  }
+
+  return normalizeConvertPayload(parsedPayload)
 }
 

@@ -426,6 +426,45 @@ button {
   color: var(--muted);
 }
 
+.convert-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.9rem;
+}
+
+.convert-control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.convert-control select {
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--text);
+}
+
+.code-output-shell {
+  padding: 0.7rem 0;
+}
+
+.code-output-shell pre {
+  margin: 0;
+  padding: 0.85rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: #020617;
+  color: #e2e8f0;
+  overflow-x: auto;
+  white-space: pre-wrap;
+}
+
 .loading-progress {
   margin-bottom: 0.85rem;
   padding: 0.8rem 0.9rem;
@@ -814,6 +853,10 @@ button {
   }
 
   .workspace-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .convert-controls {
     grid-template-columns: 1fr;
   }
 
