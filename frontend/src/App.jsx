@@ -6,6 +6,7 @@ import Optimize from './pages/Optimize.jsx'
 import Convert from './pages/Convert.jsx'
 import Docs from './pages/Docs.jsx'
 import Tests from './pages/Tests.jsx'
+import Chat from './pages/Chat.jsx'
 import './styles/global.css'
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
         <Link to="/convert">Convert</Link>
         <Link to="/docs">Docs</Link>
         <Link to="/tests">Tests</Link>
+        <Link to="/chat">AI Chat</Link>
       </nav>
       <Routes>
         <Route path="/" element={<Home />} />
@@ -27,6 +29,7 @@ function App() {
         <Route path="/convert" element={<Convert />} />
         <Route path="/docs" element={<Docs />} />
         <Route path="/tests" element={<Tests />} />
+        <Route path="/chat" element={<Chat />} />
       </Routes>
     </BrowserRouter>
   )

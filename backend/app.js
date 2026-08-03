@@ -10,6 +10,7 @@ import optimizeRoutes from './routes/optimizeRoutes.js'
 import convertRoutes from './routes/convertRoutes.js'
 import docsRoutes from './routes/docsRoutes.js'
 import generateTestsRoutes from './routes/generateTestsRoutes.js'
+import chatRoutes from './routes/chatRoutes.js'
 import { errorHandler } from './middlewares/errorHandler.js'
 
 dotenv.config()
@@ -33,6 +34,7 @@ app.use('/api', optimizeRoutes)
 app.use('/api', convertRoutes)
 app.use('/api', docsRoutes)
 app.use('/api', generateTestsRoutes)
+app.use('/api', chatRoutes)
 
 app.use(errorHandler)
 
