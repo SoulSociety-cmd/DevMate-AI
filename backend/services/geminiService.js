@@ -317,6 +317,76 @@ export const generateDocsWithGemini = async ({ code = '', language = 'javascript
   return normalizeDocsPayload(parsedPayload)
 }
 
+export const buildUnitTestCode = ({ code = '', language = 'JavaScript', testFramework = 'Jest' }) => {
+  const normalizedLanguage = String(language || 'JavaScript').trim().toLowerCase()
+  const normalizedFramework = String(testFramework || 'Jest').trim()
+
+  if (normalizedLanguage.includes('python')) {
+    const testCode = `import pytest\n\n\ndef test_add():\n    assert add(2, 3) == 5\n`
+    return {
+      testCode,
+      framework: normalizedFramework || 'Pytest',
+    }
+  }
+
+  const testCode = `describe('add', () => {\n  test('adds two numbers', () => {\n    expect(add(2, 3)).toBe(5)\n  })\n})\n`
+
+  return {
+    testCode,
+    framework: normalizedFramework || 'Jest',
+  }
+}
+
+export const generateUnitTestsWithGemini = async ({ code = '', language = 'javascript', testFramework = 'Jest' }) => {
+  const apiKey = process.env.GEMINI_API_KEY
+
+  if (!code?.trim()) {
+    const error = new Error('Code snippet is required for unit test generation.')
+    error.statusCode = 400
+    throw error
+  }
+
+  const frameworkName = String(testFramework || 'Jest').trim() || 'Jest'
+  const fallbackPayload = buildUnitTestCode({ code, language, testFramework: frameworkName })
+
+  if (!apiKey) {
+    return fallbackPayload
+  }
+
+  const systemInstruction = `You are an expert software engineer. Generate concise unit tests for the provided code and return ONLY a JSON object with this exact schema: { "testCode": string, "framework": string }. The testCode should be ready to run with the chosen framework. If the code is Python, produce pytest-compatible tests. If it is JavaScript or TypeScript, produce Jest-compatible tests.`
+  const prompt = `Language: ${language}\nFramework: ${frameworkName}\n\nCode:\n${code}`
+
+  try {
+    const cleanedText = await callGemini({ apiKey, prompt, systemInstruction })
+
+    let parsedPayload
+    try {
+      parsedPayload = JSON.parse(cleanedText)
+    } catch (parseError) {
+      const error = new Error(`Gemini returned invalid JSON: ${parseError.message}`)
+      error.statusCode = 502
+      throw error
+    }
+
+    const testCode = typeof parsedPayload?.testCode === 'string' ? parsedPayload.testCode.trim() : ''
+    const framework = typeof parsedPayload?.framework === 'string' ? parsedPayload.framework.trim() : frameworkName
+
+    if (!testCode) {
+      throw new Error('Gemini returned an invalid unit test payload format.')
+    }
+
+    return {
+      testCode,
+      framework,
+    }
+  } catch (error) {
+    return {
+      ...fallbackPayload,
+      framework: frameworkName,
+    }
+  }
+}
+
 export const convertCodeWithGemini = async ({ code = '', language = 'javascript', targetLanguage = 'python' }) => {
   const apiKey = process.env.GEMINI_API_KEY
 

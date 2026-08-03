@@ -19,7 +19,7 @@ const navItems = [
   { label: 'Optimize', icon: Sparkles, to: '/optimize' },
   { label: 'Convert', icon: ArrowRightLeft, to: '/convert' },
   { label: 'Docs', icon: BookOpenText, to: '/docs' },
-  { label: 'Tests', icon: FlaskConical, to: '/' },
+  { label: 'Tests', icon: FlaskConical, to: '/tests' },
   { label: 'AI Chat', icon: Bot, to: '/' },
 ]
 

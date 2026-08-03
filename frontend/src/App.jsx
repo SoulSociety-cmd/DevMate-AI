@@ -5,6 +5,7 @@ import FixBugs from './pages/FixBugs.jsx'
 import Optimize from './pages/Optimize.jsx'
 import Convert from './pages/Convert.jsx'
 import Docs from './pages/Docs.jsx'
+import Tests from './pages/Tests.jsx'
 import './styles/global.css'
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
         <Link to="/optimize">Optimize</Link>
         <Link to="/convert">Convert</Link>
         <Link to="/docs">Docs</Link>
+        <Link to="/tests">Tests</Link>
       </nav>
       <Routes>
         <Route path="/" element={<Home />} />
@@ -24,6 +26,7 @@ function App() {
         <Route path="/optimize" element={<Optimize />} />
         <Route path="/convert" element={<Convert />} />
         <Route path="/docs" element={<Docs />} />
+        <Route path="/tests" element={<Tests />} />
       </Routes>
     </BrowserRouter>
   )

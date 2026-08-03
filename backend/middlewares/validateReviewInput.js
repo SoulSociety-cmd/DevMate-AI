@@ -5,6 +5,8 @@ const VALID_LANGUAGES = [
   'java',
   'csharp',
   'cpp',
+  'c++',
+  'c',
   'go',
   'ruby',
   'php',
