@@ -16,9 +16,9 @@ const navItems = [
   { label: 'Review', icon: FileCode2, to: '/' },
   { label: 'Explain', icon: BookOpenText, to: '/explain' },
   { label: 'Fix Bugs', icon: Bug, to: '/fix-bugs' },
-  { label: 'Optimize', icon: Sparkles, to: '/' },
+  { label: 'Optimize', icon: Sparkles, to: '/optimize' },
   { label: 'Convert', icon: ArrowRightLeft, to: '/convert' },
-  { label: 'Docs', icon: BookOpenText, to: '/' },
+  { label: 'Docs', icon: BookOpenText, to: '/docs' },
   { label: 'Tests', icon: FlaskConical, to: '/' },
   { label: 'AI Chat', icon: Bot, to: '/' },
 ]

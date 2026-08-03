@@ -8,6 +8,7 @@ import explainRoutes from './routes/explainRoutes.js'
 import fixBugsRoutes from './routes/fixBugsRoutes.js'
 import optimizeRoutes from './routes/optimizeRoutes.js'
 import convertRoutes from './routes/convertRoutes.js'
+import docsRoutes from './routes/docsRoutes.js'
 import { errorHandler } from './middlewares/errorHandler.js'
 
 dotenv.config()
@@ -29,6 +30,7 @@ app.use('/api', explainRoutes)
 app.use('/api', fixBugsRoutes)
 app.use('/api', optimizeRoutes)
 app.use('/api', convertRoutes)
+app.use('/api', docsRoutes)
 
 app.use(errorHandler)
 

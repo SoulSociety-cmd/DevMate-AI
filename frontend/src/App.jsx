@@ -4,6 +4,7 @@ import Explain from './pages/Explain.jsx'
 import FixBugs from './pages/FixBugs.jsx'
 import Optimize from './pages/Optimize.jsx'
 import Convert from './pages/Convert.jsx'
+import Docs from './pages/Docs.jsx'
 import './styles/global.css'
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
         <Link to="/explain">Explain</Link>
         <Link to="/optimize">Optimize</Link>
         <Link to="/convert">Convert</Link>
+        <Link to="/docs">Docs</Link>
       </nav>
       <Routes>
         <Route path="/" element={<Home />} />
@@ -21,6 +23,7 @@ function App() {
         <Route path="/fix-bugs" element={<FixBugs />} />
         <Route path="/optimize" element={<Optimize />} />
         <Route path="/convert" element={<Convert />} />
+        <Route path="/docs" element={<Docs />} />
       </Routes>
     </BrowserRouter>
   )

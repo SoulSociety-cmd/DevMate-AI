@@ -278,6 +278,45 @@ export const optimizeCodeWithGemini = async ({ code = '', language = 'javascript
   return normalizeOptimizePayload(parsedPayload)
 }
 
+const normalizeDocsPayload = (payload) => {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    throw new Error('Gemini returned an invalid documentation payload format.')
+  }
+
+  const documentation = typeof payload.documentation === 'string' ? payload.documentation.trim() : ''
+
+  if (!documentation) {
+    throw new Error('Gemini returned an invalid documentation payload format.')
+  }
+
+  return documentation
+}
+
+export const generateDocsWithGemini = async ({ code = '', language = 'javascript' }) => {
+  const apiKey = process.env.GEMINI_API_KEY
+
+  if (!code?.trim()) {
+    const error = new Error('Code snippet is required for documentation generation.')
+    error.statusCode = 400
+    throw error
+  }
+
+  const systemInstruction = `You are an expert technical writer and software engineer. Generate markdown documentation for the provided code, including sections: Description, Parameters, Return Value, and Example. Return ONLY a JSON object with this exact schema: { "documentation": string }. The documentation value must be markdown text.`
+  const prompt = `Language: ${language}\n\nCode:\n${code}`
+  const cleanedText = await callGemini({ apiKey, prompt, systemInstruction })
+
+  let parsedPayload
+  try {
+    parsedPayload = JSON.parse(cleanedText)
+  } catch (parseError) {
+    const error = new Error(`Gemini returned invalid JSON: ${parseError.message}`)
+    error.statusCode = 502
+    throw error
+  }
+
+  return normalizeDocsPayload(parsedPayload)
+}
+
 export const convertCodeWithGemini = async ({ code = '', language = 'javascript', targetLanguage = 'python' }) => {
   const apiKey = process.env.GEMINI_API_KEY
 
