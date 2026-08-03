@@ -7,7 +7,10 @@ import { convertCode } from '../services/convertService.js'
 import AppHeader from '../components/AppHeader.jsx'
 import AppSidebar from '../components/AppSidebar.jsx'
 import CodeEditor from '../components/CodeEditor.jsx'
+import CodeDiffPanel from '../components/CodeDiffPanel.jsx'
+import ModelSelector from '../components/ModelSelector.jsx'
 import { useTheme } from '../context/ThemeContext.jsx'
+import { getHistoryEntries, saveHistoryEntry } from '../utils/historyStorage.js'
 import '../styles/app-shell.css'
 
 const languages = ['Python', 'JavaScript', 'Java', 'C++']
@@ -40,6 +43,8 @@ function Convert() {
   const [notes, setNotes] = useState([])
   const [isConverting, setIsConverting] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  const [selectedModel, setSelectedModel] = useState({ provider: 'gemini', model: 'gemini-2.0-flash' })
+  const [historyEntries, setHistoryEntries] = useState(getHistoryEntries)
 
   useEffect(() => {
     setCode(codeSamples[sourceLanguage])
@@ -63,7 +68,7 @@ function Convert() {
     setErrorMessage('')
 
     try {
-      const response = await convertCode({ code, language: sourceLanguage, targetLanguage })
+      const response = await convertCode({ code, language: sourceLanguage, targetLanguage, model: selectedModel.model, provider: selectedModel.provider })
       const conversionData = response?.data?.data
 
       if (!conversionData?.convertedCode) {
@@ -72,6 +77,7 @@ function Convert() {
 
       setConvertedCode(conversionData.convertedCode)
       setNotes(Array.isArray(conversionData.notes) ? conversionData.notes : [])
+      setHistoryEntries(saveHistoryEntry({ type: 'convert', language: `${sourceLanguage} → ${targetLanguage}`, summary: conversionData.notes?.[0] || 'Conversion completed', code }))
     } catch (error) {
       const message = error?.response?.data?.message || error?.response?.data?.error || error?.message || 'Unable to reach the backend. Please make sure the API server is running.'
       setErrorMessage(message)
@@ -131,6 +137,8 @@ function Convert() {
               </div>
 
               <div className="analysis-shell">
+                <ModelSelector value={selectedModel} onChange={setSelectedModel} disabled={isConverting} />
+
                 <button type="button" className="generate-button" onClick={handleConvert} disabled={isConverting}>
                   {isConverting ? <><span className="spinner" aria-hidden="true" />Converting...</> : 'Convert Code'}
                 </button>
@@ -156,6 +164,8 @@ function Convert() {
                   </div>
                 </div>
 
+                {convertedCode ? <CodeDiffPanel oldValue={code} newValue={convertedCode} title="Diff preview" /> : null}
+
                 <div className="result-card">
                   <div className="result-card-header">
                     <h3>Notes</h3>
@@ -165,6 +175,23 @@ function Convert() {
                       {markdownBody}
                     </ReactMarkdown>
                   </div>
+                </div>
+
+                <div className="result-card">
+                  <div className="result-card-header">
+                    <h3>Recent history</h3>
+                  </div>
+                  {historyEntries.length ? (
+                    <ul className="metric-list">
+                      {historyEntries.map((entry) => (
+                        <li key={entry.id} className="metric-item">
+                          <strong>{entry.type}</strong> · {entry.language} · {entry.summary}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="result-text">No history saved yet.</p>
+                  )}
                 </div>
               </div>
             </div>

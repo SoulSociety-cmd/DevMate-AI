@@ -15,13 +15,15 @@ const languageMap = {
   js: 'javascript',
 }
 
-export const fixBugs = async ({ code, language }) => {
+export const fixBugs = async ({ code, language, model, provider }) => {
   const rawLanguage = typeof language === 'string' ? language.trim() : ''
   const normalizedLanguage = languageMap[rawLanguage.toLowerCase()] || rawLanguage.toLowerCase()
 
   return api.post('/api/fix-bugs', {
     code,
     language: normalizedLanguage,
+    model,
+    provider,
   })
 }
 

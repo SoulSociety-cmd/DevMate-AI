@@ -15,13 +15,15 @@ const languageMap = {
   js: 'javascript',
 }
 
-export const reviewCode = async ({ code, language }) => {
+export const reviewCode = async ({ code, language, model, provider }) => {
   const rawLanguage = typeof language === 'string' ? language.trim() : ''
   const normalizedLanguage = languageMap[rawLanguage.toLowerCase()] || rawLanguage.toLowerCase()
 
   return api.post('/api/review', {
     code,
     language: normalizedLanguage,
+    model,
+    provider,
   })
 }
 

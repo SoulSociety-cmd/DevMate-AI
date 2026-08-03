@@ -441,7 +441,8 @@ button {
   font-size: 0.9rem;
 }
 
-.convert-control select {
+.convert-control select,
+.convert-control input {
   width: 100%;
   padding: 0.7rem 0.8rem;
   border-radius: 12px;

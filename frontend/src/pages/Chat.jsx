@@ -16,7 +16,7 @@ function Chat() {
     const userMessage = { role: 'user', content: trimmed || '' }
     // if code attached, append it to content as fenced block
     if (attachCode && code.trim()) {
-      userMessage.content += `\n\n``` ${language}\n${code}\n```\n`
+      userMessage.content += `\n\n\`\`\` ${language}\n${code}\n\`\`\`\n`
     }
 
     const nextMessages = [...messages, userMessage]

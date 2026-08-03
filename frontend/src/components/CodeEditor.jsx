@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import Editor from '@monaco-editor/react'
+import { Upload } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext.jsx'
 
 const languageMap = {
@@ -16,7 +17,7 @@ const placeholders = {
   JavaScript: `function greet(name) {\n  return \`Hello, \${name}\`;\n}\n\nconsole.log(greet('DevMate AI'))`,
 }
 
-function CodeEditor({ language = 'Python', value = '', onChange, disabled = false }) {
+function CodeEditor({ language = 'Python', value = '', onChange, disabled = false, onFileLoaded }) {
   const { theme } = useTheme()
   const [isFocused, setIsFocused] = useState(false)
   const [editorValue, setEditorValue] = useState(value)
@@ -38,6 +39,27 @@ function CodeEditor({ language = 'Python', value = '', onChange, disabled = fals
     editorRef.current?.focus()
   }
 
+  const handleFileUpload = async (event) => {
+    const file = event.target.files?.[0]
+    if (!file) {
+      return
+    }
+
+    const allowedExtensions = ['.cpp', '.py', '.java', '.js']
+    const extension = `.${file.name.split('.').pop()?.toLowerCase()}`
+    if (!allowedExtensions.includes(extension)) {
+      window.alert('Only .cpp, .py, .java, and .js files are supported.')
+      return
+    }
+
+    const text = await file.text()
+    const nextValue = text || ''
+    setEditorValue(nextValue)
+    onChange?.(nextValue)
+    onFileLoaded?.({ name: file.name, content: nextValue, language })
+    event.target.value = ''
+  }
+
   const handleMount = (editor) => {
     editorRef.current = editor
     editor.onDidFocusEditorText(() => setIsFocused(true))
@@ -53,6 +75,11 @@ function CodeEditor({ language = 'Python', value = '', onChange, disabled = fals
       <div className="editor-toolbar">
         <span>{language} Editor</span>
         <div className="editor-toolbar-actions">
+          <label className="clear-button" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', cursor: 'pointer' }}>
+            <Upload size={14} />
+            <span>Upload</span>
+            <input type="file" accept=".cpp,.py,.java,.js" onChange={handleFileUpload} style={{ display: 'none' }} />
+          </label>
           <span className="editor-pill">AI-ready</span>
           <button type="button" className="clear-button" onClick={handleClear} disabled={disabled}>
             Clear

@@ -3,7 +3,8 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 
 dotenv.config()
 
-const DEFAULT_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash'
+const DEFAULT_GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash'
+const DEFAULT_OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini'
 const DEFAULT_TIMEOUT_MS = Number(process.env.GEMINI_TIMEOUT_MS || 30000)
 
 const stripMarkdownJson = (rawText = '') => {
@@ -113,10 +114,27 @@ export const normalizeConvertPayload = (payload) => {
   }
 }
 
-const buildGeminiModel = (apiKey, systemInstruction) => {
+export const resolveModelSelection = (provider = 'gemini', model = '') => {
+  const normalizedProvider = String(provider || 'gemini').trim().toLowerCase()
+  const safeProvider = normalizedProvider === 'openai' ? 'openai' : 'gemini'
+
+  if (safeProvider === 'openai') {
+    return {
+      provider: safeProvider,
+      model: String(model || '').trim() || DEFAULT_OPENAI_MODEL,
+    }
+  }
+
+  return {
+    provider: safeProvider,
+    model: String(model || '').trim() || DEFAULT_GEMINI_MODEL,
+  }
+}
+
+const buildGeminiModel = (apiKey, systemInstruction, modelName) => {
   const genAI = new GoogleGenerativeAI(apiKey)
   return genAI.getGenerativeModel({
-    model: DEFAULT_MODEL,
+    model: modelName || DEFAULT_GEMINI_MODEL,
     systemInstruction,
     generationConfig: {
       temperature: 0.2,
@@ -125,7 +143,57 @@ const buildGeminiModel = (apiKey, systemInstruction) => {
   })
 }
 
-const callGemini = async ({ apiKey, prompt, systemInstruction }) => {
+const callOpenAI = async ({ prompt, systemInstruction, modelName }) => {
+  const apiKey = process.env.OPENAI_API_KEY
+
+  if (!apiKey) {
+    const error = new Error('OPENAI_API_KEY is not configured.')
+    error.statusCode = 500
+    throw error
+  }
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: modelName || DEFAULT_OPENAI_MODEL,
+      temperature: 0.2,
+      response_format: { type: 'json_object' },
+      messages: [
+        { role: 'system', content: systemInstruction },
+        { role: 'user', content: prompt },
+      ],
+    }),
+  })
+
+  const data = await response.json().catch(() => ({}))
+
+  if (!response.ok) {
+    const error = new Error(data?.error?.message || 'OpenAI request failed.')
+    error.statusCode = response.status || 502
+    throw error
+  }
+
+  const content = data?.choices?.[0]?.message?.content
+  if (typeof content !== 'string' || !content.trim()) {
+    const error = new Error('OpenAI returned an empty response.')
+    error.statusCode = 502
+    throw error
+  }
+
+  return stripMarkdownJson(content)
+}
+
+const callGemini = async ({ apiKey, prompt, systemInstruction, provider = 'gemini', model }) => {
+  const selection = resolveModelSelection(provider, model)
+
+  if (selection.provider === 'openai') {
+    return callOpenAI({ prompt, systemInstruction, modelName: selection.model })
+  }
+
   if (!apiKey) {
     const error = new Error('GEMINI_API_KEY is not configured.')
     error.statusCode = 500
@@ -138,11 +206,11 @@ const callGemini = async ({ apiKey, prompt, systemInstruction }) => {
     throw error
   }
 
-  const model = buildGeminiModel(apiKey, systemInstruction)
+  const modelInstance = buildGeminiModel(apiKey, systemInstruction, selection.model)
   let timeoutId
 
   try {
-    const responsePromise = model.generateContent(prompt)
+    const responsePromise = modelInstance.generateContent(prompt)
     const timeoutPromise = new Promise((_, reject) => {
       timeoutId = setTimeout(() => {
         const error = new Error(`Gemini request timed out after ${DEFAULT_TIMEOUT_MS}ms.`)
@@ -170,7 +238,7 @@ const callGemini = async ({ apiKey, prompt, systemInstruction }) => {
   }
 }
 
-export const analyzeCodeWithGemini = async ({ code = '', language = 'javascript' }) => {
+export const analyzeCodeWithGemini = async ({ code = '', language = 'javascript', provider = 'gemini', model = '' }) => {
   const apiKey = process.env.GEMINI_API_KEY
 
   if (!code?.trim()) {
@@ -181,7 +249,7 @@ export const analyzeCodeWithGemini = async ({ code = '', language = 'javascript'
 
   const systemInstruction = `You are a senior code reviewer. Analyze the provided code and return ONLY a JSON object with this exact schema: { "score": number (0-100), "bugs": string[], "performance": string, "security": string, "suggestions": string[], "improvedCode": string }. Do not include markdown, explanations, or extra keys. Keep the content concise and actionable.`
   const prompt = `Language: ${language}\n\nCode:\n${code}`
-  const cleanedText = await callGemini({ apiKey, prompt, systemInstruction })
+  const cleanedText = await callGemini({ apiKey, prompt, systemInstruction, provider, model })
 
   let parsedPayload
   try {
@@ -195,7 +263,7 @@ export const analyzeCodeWithGemini = async ({ code = '', language = 'javascript'
   return normalizeReviewPayload(parsedPayload)
 }
 
-export const explainCodeWithGemini = async ({ code = '', language = 'javascript' }) => {
+export const explainCodeWithGemini = async ({ code = '', language = 'javascript', provider = 'gemini', model = '' }) => {
   const apiKey = process.env.GEMINI_API_KEY
 
   if (!code?.trim()) {
@@ -206,7 +274,7 @@ export const explainCodeWithGemini = async ({ code = '', language = 'javascript'
 
   const systemInstruction = `You are a patient coding tutor for beginners. Explain the provided code step by step in simple language. Return ONLY a JSON object with this exact schema: { "explanation": string }. The explanation value must be a markdown string with headings and bullet points, easy for beginners to follow.`
   const prompt = `Language: ${language}\n\nCode:\n${code}`
-  const cleanedText = await callGemini({ apiKey, prompt, systemInstruction })
+  const cleanedText = await callGemini({ apiKey, prompt, systemInstruction, provider, model })
 
   let parsedPayload
   try {
@@ -228,7 +296,7 @@ export const explainCodeWithGemini = async ({ code = '', language = 'javascript'
   }
 }
 
-export const fixBugsWithGemini = async ({ code = '', language = 'javascript' }) => {
+export const fixBugsWithGemini = async ({ code = '', language = 'javascript', provider = 'gemini', model = '' }) => {
   const apiKey = process.env.GEMINI_API_KEY
 
   if (!code?.trim()) {
@@ -239,7 +307,7 @@ export const fixBugsWithGemini = async ({ code = '', language = 'javascript' }) 
 
   const systemInstruction = `You are a senior debugging engineer. Analyze the provided code, identify likely bugs, and return ONLY a JSON object with this exact schema: { "bugsFound": string[], "fixedCode": string, "explanation": string }. Keep the explanation concise and actionable.`
   const prompt = `Language: ${language}\n\nCode:\n${code}`
-  const cleanedText = await callGemini({ apiKey, prompt, systemInstruction })
+  const cleanedText = await callGemini({ apiKey, prompt, systemInstruction, provider, model })
 
   let parsedPayload
   try {
@@ -253,7 +321,7 @@ export const fixBugsWithGemini = async ({ code = '', language = 'javascript' }) 
   return normalizeFixBugsPayload(parsedPayload)
 }
 
-export const optimizeCodeWithGemini = async ({ code = '', language = 'javascript' }) => {
+export const optimizeCodeWithGemini = async ({ code = '', language = 'javascript', provider = 'gemini', model = '' }) => {
   const apiKey = process.env.GEMINI_API_KEY
 
   if (!code?.trim()) {
@@ -264,7 +332,7 @@ export const optimizeCodeWithGemini = async ({ code = '', language = 'javascript
 
   const systemInstruction = `You are a senior performance engineer and optimization specialist. Analyze the provided code and return ONLY a JSON object with this exact schema: { "optimizedCode": string, "improvements": string[], "performanceGain": string }. The optimizedCode should be a fully working, optimized version. Improvements should be an array of specific optimizations made. PerformanceGain should describe the expected performance improvement. Keep all content concise and actionable.`
   const prompt = `Language: ${language}\n\nCode:\n${code}`
-  const cleanedText = await callGemini({ apiKey, prompt, systemInstruction })
+  const cleanedText = await callGemini({ apiKey, prompt, systemInstruction, provider, model })
 
   let parsedPayload
   try {
@@ -292,7 +360,7 @@ const normalizeDocsPayload = (payload) => {
   return documentation
 }
 
-export const generateDocsWithGemini = async ({ code = '', language = 'javascript' }) => {
+export const generateDocsWithGemini = async ({ code = '', language = 'javascript', provider = 'gemini', model = '' }) => {
   const apiKey = process.env.GEMINI_API_KEY
 
   if (!code?.trim()) {
@@ -303,7 +371,7 @@ export const generateDocsWithGemini = async ({ code = '', language = 'javascript
 
   const systemInstruction = `You are an expert technical writer and software engineer. Generate markdown documentation for the provided code, including sections: Description, Parameters, Return Value, and Example. Return ONLY a JSON object with this exact schema: { "documentation": string }. The documentation value must be markdown text.`
   const prompt = `Language: ${language}\n\nCode:\n${code}`
-  const cleanedText = await callGemini({ apiKey, prompt, systemInstruction })
+  const cleanedText = await callGemini({ apiKey, prompt, systemInstruction, provider, model })
 
   let parsedPayload
   try {
@@ -337,7 +405,7 @@ export const buildUnitTestCode = ({ code = '', language = 'JavaScript', testFram
   }
 }
 
-export const generateUnitTestsWithGemini = async ({ code = '', language = 'javascript', testFramework = 'Jest' }) => {
+export const generateUnitTestsWithGemini = async ({ code = '', language = 'javascript', testFramework = 'Jest', provider = 'gemini', model = '' }) => {
   const apiKey = process.env.GEMINI_API_KEY
 
   if (!code?.trim()) {
@@ -357,7 +425,7 @@ export const generateUnitTestsWithGemini = async ({ code = '', language = 'javas
   const prompt = `Language: ${language}\nFramework: ${frameworkName}\n\nCode:\n${code}`
 
   try {
-    const cleanedText = await callGemini({ apiKey, prompt, systemInstruction })
+    const cleanedText = await callGemini({ apiKey, prompt, systemInstruction, provider, model })
 
     let parsedPayload
     try {
@@ -387,7 +455,7 @@ export const generateUnitTestsWithGemini = async ({ code = '', language = 'javas
   }
 }
 
-export const convertCodeWithGemini = async ({ code = '', language = 'javascript', targetLanguage = 'python' }) => {
+export const convertCodeWithGemini = async ({ code = '', language = 'javascript', targetLanguage = 'python', provider = 'gemini', model = '' }) => {
   const apiKey = process.env.GEMINI_API_KEY
 
   if (!code?.trim()) {
@@ -398,7 +466,7 @@ export const convertCodeWithGemini = async ({ code = '', language = 'javascript'
 
   const systemInstruction = `You are a polyglot software engineer. Translate the provided code to the requested target language while preserving intent and keeping it runnable. Return ONLY a JSON object with this exact schema: { "convertedCode": string, "notes": string[] }. Keep the notes concise and useful.`
   const prompt = `Source Language: ${language}\nTarget Language: ${targetLanguage}\n\nCode:\n${code}`
-  const cleanedText = await callGemini({ apiKey, prompt, systemInstruction })
+  const cleanedText = await callGemini({ apiKey, prompt, systemInstruction, provider, model })
 
   let parsedPayload
   try {

@@ -14,7 +14,7 @@ const languageMap = {
   'c#': 'csharp',
 }
 
-export const convertCode = async ({ code, language, targetLanguage }) => {
+export const convertCode = async ({ code, language, targetLanguage, model, provider }) => {
   const sourceLanguage = typeof language === 'string' ? language.trim().toLowerCase() : ''
   const destinationLanguage = typeof targetLanguage === 'string' ? targetLanguage.trim().toLowerCase() : ''
 
@@ -22,6 +22,8 @@ export const convertCode = async ({ code, language, targetLanguage }) => {
     code,
     language: languageMap[sourceLanguage] || sourceLanguage,
     targetLanguage: languageMap[destinationLanguage] || destinationLanguage,
+    model,
+    provider,
   })
 }
 

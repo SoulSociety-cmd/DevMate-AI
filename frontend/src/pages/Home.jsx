@@ -7,7 +7,10 @@ import { reviewCode } from '../services/reviewService.js'
 import AppHeader from '../components/AppHeader.jsx'
 import AppSidebar from '../components/AppSidebar.jsx'
 import CodeEditor from '../components/CodeEditor.jsx'
+import CodeDiffPanel from '../components/CodeDiffPanel.jsx'
+import ModelSelector from '../components/ModelSelector.jsx'
 import { useTheme } from '../context/ThemeContext.jsx'
+import { getHistoryEntries, saveHistoryEntry } from '../utils/historyStorage.js'
 import '../styles/app-shell.css'
 
 const languages = ['C++', 'Python', 'Java', 'JavaScript']
@@ -87,6 +90,8 @@ function Home() {
   ])
   const [chatInput, setChatInput] = useState('')
   const [copiedNotice, setCopiedNotice] = useState('')
+  const [selectedModel, setSelectedModel] = useState({ provider: 'gemini', model: 'gemini-2.0-flash' })
+  const [historyEntries, setHistoryEntries] = useState(getHistoryEntries)
 
   useEffect(() => {
     setCode(codeSamples[activeLang])
@@ -159,7 +164,7 @@ function Home() {
     setErrorMessage('')
 
     try {
-      const response = await reviewCode({ code, language: activeLang })
+      const response = await reviewCode({ code, language: activeLang, model: selectedModel.model, provider: selectedModel.provider })
       const reviewData = response?.data?.data
 
       if (!reviewData) {
@@ -176,6 +181,7 @@ function Home() {
       ]
 
       setResults(mappedResults)
+      setHistoryEntries(saveHistoryEntry({ type: 'review', language: activeLang, summary: reviewData.improvedCode ? 'Review completed with improved code' : 'Review completed', code }))
       setAssistantMessage(reviewData.improvedCode ? 'Review complete. The improved version and recommendations are ready.' : 'Review complete. No improved code was generated.')
       setChatMessages((prev) => [
         ...prev,
@@ -294,6 +300,8 @@ function Home() {
                   />
                 </div>
 
+                <ModelSelector value={selectedModel} onChange={setSelectedModel} disabled={isGenerating} />
+
                 <button type="button" className="generate-button" onClick={handleGenerate} disabled={isGenerating}>
                   {isGenerating ? <><span className="spinner" aria-hidden="true" />Generating...</> : 'Generate'}
                 </button>
@@ -333,6 +341,27 @@ function Home() {
                       <h3>Assistant response</h3>
                       <p>{assistantMessage}</p>
                     </>
+                  )}
+                </div>
+
+                {results.some((item) => item.title === 'Improved Code' && item.value && item.value !== 'Pending') ? (
+                  <CodeDiffPanel oldValue={code} newValue={results.find((item) => item.title === 'Improved Code')?.value || ''} title="Diff preview" />
+                ) : null}
+
+                <div className="result-card">
+                  <div className="result-card-header">
+                    <h3>Recent history</h3>
+                  </div>
+                  {historyEntries.length ? (
+                    <ul className="metric-list">
+                      {historyEntries.map((entry) => (
+                        <li key={entry.id} className="metric-item">
+                          <strong>{entry.type}</strong> · {entry.language} · {entry.summary}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="result-text">No history saved yet.</p>
                   )}
                 </div>
 

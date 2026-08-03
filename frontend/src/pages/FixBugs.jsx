@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
-import ReactDiffViewer from 'react-diff-viewer-continued'
 import { fixBugs } from '../services/fixBugsService.js'
 import AppHeader from '../components/AppHeader.jsx'
 import AppSidebar from '../components/AppSidebar.jsx'
 import CodeEditor from '../components/CodeEditor.jsx'
+import CodeDiffPanel from '../components/CodeDiffPanel.jsx'
+import ModelSelector from '../components/ModelSelector.jsx'
 import { useTheme } from '../context/ThemeContext.jsx'
+import { getHistoryEntries, saveHistoryEntry } from '../utils/historyStorage.js'
 import '../styles/app-shell.css'
 
 const languages = ['C++', 'Python', 'Java', 'JavaScript']
@@ -24,6 +26,8 @@ function FixBugs() {
   const [result, setResult] = useState(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  const [selectedModel, setSelectedModel] = useState({ provider: 'gemini', model: 'gemini-2.0-flash' })
+  const [historyEntries, setHistoryEntries] = useState(getHistoryEntries)
 
   useEffect(() => {
     setCode(codeSamples[activeLang])
@@ -50,7 +54,7 @@ function FixBugs() {
     setErrorMessage('')
 
     try {
-      const response = await fixBugs({ code, language: activeLang })
+      const response = await fixBugs({ code, language: activeLang, model: selectedModel.model, provider: selectedModel.provider })
       const fixData = response?.data?.data
 
       if (!fixData) {
@@ -58,6 +62,7 @@ function FixBugs() {
       }
 
       setResult(fixData)
+      setHistoryEntries(saveHistoryEntry({ type: 'fix-bugs', language: activeLang, summary: fixData.explanation || 'Bug fixes generated', code }))
     } catch (error) {
       const message = error?.response?.data?.message || error?.response?.data?.error || error?.message || 'Unable to reach the backend. Please make sure the API server is running.'
       setErrorMessage(message)
@@ -113,6 +118,8 @@ function FixBugs() {
                   <p>DevMate AI will inspect your code, highlight likely issues, and provide a corrected version.</p>
                 </div>
 
+                <ModelSelector value={selectedModel} onChange={setSelectedModel} disabled={isGenerating} />
+
                 <button type="button" className="generate-button" onClick={handleFix} disabled={isGenerating}>
                   {isGenerating ? <><span className="spinner" aria-hidden="true" />Scanning...</> : 'Fix Bugs'}
                 </button>
@@ -135,26 +142,30 @@ function FixBugs() {
                       <h3>Explanation</h3>
                     </div>
                     <p className="result-text">{result.explanation}</p>
-                    <div className="result-card-header">
-                      <h3>Diff preview</h3>
-                    </div>
-                    {diffContent ? (
-                      <div className="diff-viewer-shell">
-                        <ReactDiffViewer
-                          oldValue={diffContent.oldValue}
-                          newValue={diffContent.newValue}
-                          splitView
-                          hideLineNumbers={false}
-                          useDarkTheme={theme === 'dark'}
-                        />
-                      </div>
-                    ) : null}
+                    {diffContent ? <CodeDiffPanel oldValue={diffContent.oldValue} newValue={diffContent.newValue} title="Diff preview" /> : null}
                     <div className="result-card-header">
                       <h3>Fixed code</h3>
                     </div>
                     <pre className="markdown-block" style={{ whiteSpace: 'pre-wrap' }}>{result.fixedCode}</pre>
                   </div>
                 ) : null}
+
+                <div className="result-card">
+                  <div className="result-card-header">
+                    <h3>Recent history</h3>
+                  </div>
+                  {historyEntries.length ? (
+                    <ul className="metric-list">
+                      {historyEntries.map((entry) => (
+                        <li key={entry.id} className="metric-item">
+                          <strong>{entry.type}</strong> · {entry.language} · {entry.summary}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="result-text">No history saved yet.</p>
+                  )}
+                </div>
               </div>
             </div>
           </section>
