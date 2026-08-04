@@ -13,14 +13,12 @@ import { NavLink } from 'react-router-dom'
 
 const navItems = [
   { label: 'Home', icon: House, to: '/' },
-  { label: 'Review', icon: FileCode2, to: '/' },
   { label: 'Explain', icon: BookOpenText, to: '/explain' },
   { label: 'Fix Bugs', icon: Bug, to: '/fix-bugs' },
   { label: 'Optimize', icon: Sparkles, to: '/optimize' },
   { label: 'Convert', icon: ArrowRightLeft, to: '/convert' },
   { label: 'Docs', icon: BookOpenText, to: '/docs' },
   { label: 'Tests', icon: FlaskConical, to: '/tests' },
-  { label: 'AI Chat', icon: Bot, to: '/' },
 ]
 
 function AppSidebar({ isOpen }) {
