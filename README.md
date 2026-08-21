@@ -1,101 +1,168 @@
 # DevMate AI
 
-DevMate AI is an AI-assisted developer workspace with a React frontend and an Express backend.
+> An AI-powered developer workspace for understanding, reviewing, fixing, and improving code.
 
-## Project structure
+**Demo:** `https://devmate-ai-frontend.onrender.com`
 
-- frontend/ - Vite + React application
-- backend/ - Node.js + Express API
+DevMate AI is a full-stack web application that brings common development workflows into one focused workspace. Developers can submit code, select a programming language and use AI-assisted tools to produce practical results, including explanations, bug fixes, optimizations, conversions, documentation, tests, and code reviews.
 
-## Local development
+## Features
+
+- Code review with structured feedback
+- Code explanation for unfamiliar files and functions
+- Bug fixing with an updated code result
+- Code optimization suggestions
+- Source-code conversion between languages
+- Documentation and test generation
+- AI developer chat
+- File upload, diff view, theme support, and local history
+- Backend health check and configurable AI model selection
+
+## Architecture
+
+```text
+DevMate AI
+├── frontend/   React + Vite client application
+└── backend/    Node.js + Express REST API
+```
+
+The frontend communicates with the backend through REST endpoints. The backend integrates with Google's Generative AI API and keeps API credentials on the server.
+
+## Tech Stack
+
+**Frontend:** React 19, Vite, React Router, Monaco Editor, Axios, Lucide React, React Markdown
+
+**Backend:** Node.js, Express 5, Google Generative AI SDK, Helmet, CORS, Morgan
+
+**Testing:** Node.js built-in test runner
+
+## Requirements
+
+- Node.js 18 or later
+- npm
+- A Google Gemini API key
+
+## Local Setup
+
+Clone the repository and install dependencies for both applications:
+
+```bash
+git clone <your-repository-url>
+cd DevMate-AI
+
+cd backend
+npm install
+
+cd ../frontend
+npm install
+```
+
+Create `backend/.env`:
+
+```env
+GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODEL=gemini-2.0-flash
+PORT=5000
+FRONTEND_URL=http://localhost:5173
+```
+
+Create `frontend/.env`:
+
+```env
+VITE_API_URL=http://localhost:5000
+```
+
+Start the backend and frontend in separate terminals:
+
+```bash
+# Terminal 1
+cd backend
+npm run dev
+```
+
+```bash
+# Terminal 2
+cd frontend
+npm run dev
+```
+
+The Vite development server is usually available at `http://localhost:5173`.
+
+## Available Scripts
 
 ### Backend
 
-```bash
-cd backend
-npm install
-npm run dev
-```
+| Command | Description |
+| --- | --- |
+| `npm start` | Start the API server |
+| `npm run dev` | Start the API server with Node watch mode |
+| `npm test` | Run backend tests |
 
 ### Frontend
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Start the Vite development server |
+| `npm run build` | Create a production build |
+| `npm run preview` | Preview the production build locally |
+| `npm run lint` | Run Oxlint |
 
-## Render deployment guide
+## API
 
-### 1. Push code to GitHub
+The backend exposes feature-specific endpoints under `/api`:
 
-- Commit and push the repository to GitHub.
-- Make sure the project contains the Render-ready config in both frontend and backend.
+- `POST /api/review`
+- `POST /api/explain`
+- `POST /api/fix-bugs`
+- `POST /api/optimize`
+- `POST /api/convert`
+- `POST /api/docs`
+- `POST /api/generate-tests`
+- `POST /api/chat`
+- `GET /api/health`
 
-### 2. Create the backend Web Service on Render
-
-1. In Render, choose New + Web Service.
-2. Connect your GitHub repository.
-3. Set the following values:
-   - Runtime: Node
-   - Root Directory: backend
-   - Build Command: npm install
-   - Start Command: npm start
-4. Add environment variables:
-   - GEMINI_API_KEY=your_gemini_key
-   - OPENAI_API_KEY=your_openai_key (optional)
-   - PORT=10000
-   - GEMINI_MODEL=gemini-2.0-flash
-   - OPENAI_MODEL=gpt-4o-mini
-   - FRONTEND_URL=https://your-frontend-url.onrender.com
-5. Deploy the service.
-6. Copy the backend URL, for example: https://devmate-ai-backend.onrender.com
-
-### 3. Create the frontend Static Site on Render
-
-1. In Render, choose New + Static Site.
-2. Connect the same GitHub repository.
-3. Set the following values:
-   - Root Directory: frontend
-   - Build Command: npm run build
-   - Publish Directory: dist
-4. Add environment variables:
-   - VITE_API_URL=https://your-backend-url.onrender.com
-5. Deploy the site.
-6. Render will provide a frontend URL such as https://devmate-ai-frontend.onrender.com
-
-### 4. Test the full flow on the real domain
-
-1. Open the frontend URL in the browser.
-2. Verify the app loads correctly.
-3. Try the following flows:
-   - Review code
-   - Fix bugs
-   - Convert code
-   - Upload a supported file
-   - Check diff view and history
-4. Confirm the frontend can reach the backend via the VITE_API_URL value.
-5. If needed, update FRONTEND_URL in the backend environment after the frontend URL is known.
-
-## Backend API example
-
-### Review endpoint
-
-- POST /api/review
-
-### Request body
-
-```json
-{
-  "code": "function greet(name) { return 'Hello ' + name; }",
-  "language": "javascript"
-}
-```
-
-### cURL example
+Example review request:
 
 ```bash
 curl -X POST http://localhost:5000/api/review \
   -H "Content-Type: application/json" \
   -d '{"code":"function greet(name) { return \"Hello \" + name; }","language":"javascript"}'
 ```
+
+## Deployment on Render
+
+Deploy the frontend and backend as separate Render services. Never commit real API keys or production URLs to `.env` files.
+
+### Backend Web Service
+
+- Root Directory: `backend`
+- Build Command: `npm install`
+- Start Command: `npm start`
+- Required environment variable: `GEMINI_API_KEY`
+- Optional variables: `GEMINI_MODEL`, `PORT`, `FRONTEND_URL`
+
+After deployment, verify:
+
+```text
+https://<backend-domain>/api/health
+```
+
+### Frontend Static Site
+
+- Root Directory: `frontend`
+- Build Command: `npm run build`
+- Publish Directory: `dist`
+- Environment variable: `VITE_API_URL=https://<backend-domain>`
+
+After the frontend is deployed, set the exact frontend URL as the backend's `FRONTEND_URL` value and redeploy the backend. `VITE_API_URL` is embedded during the Vite build, so update it and rebuild whenever the API URL changes.
+
+## Security Notes
+
+- Keep `GEMINI_API_KEY` on the backend only.
+- Use environment variables for local and production configuration.
+- Confirm `.env` files are ignored before pushing to GitHub.
+- Restrict CORS with `FRONTEND_URL` in production.
+
+## License
+
+No license has been specified for this project yet.
