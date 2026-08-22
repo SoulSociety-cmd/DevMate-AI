@@ -3,7 +3,9 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 
 dotenv.config()
 
-const DEFAULT_GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash'
+const model = genAI.getGenerativeModel({
+    model: process.env.GEMINI_MODEL || "gemini-3.6-flash"
+});
 const DEFAULT_OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini'
 const DEFAULT_TIMEOUT_MS = Number(process.env.GEMINI_TIMEOUT_MS || 30000)
 
