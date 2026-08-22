@@ -3,7 +3,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 
 dotenv.config()
 
-const DEFAULT_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash'
+const DEFAULT_MODEL = process.env.GEMINI_MODEL || 'gemini-3.6-flash'
 const DEFAULT_TIMEOUT_MS = Number(process.env.GEMINI_TIMEOUT_MS || 30000)
 
 const stripMarkdown = (rawText = '') => {

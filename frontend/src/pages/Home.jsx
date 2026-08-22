@@ -90,7 +90,7 @@ function Home() {
   ])
   const [chatInput, setChatInput] = useState('')
   const [copiedNotice, setCopiedNotice] = useState('')
-  const [selectedModel, setSelectedModel] = useState({ provider: 'gemini', model: 'gemini-2.0-flash' })
+  const [selectedModel, setSelectedModel] = useState({ provider: 'gemini', model: 'gemini-3.6-flash' })
   const [historyEntries, setHistoryEntries] = useState(getHistoryEntries)
 
   useEffect(() => {

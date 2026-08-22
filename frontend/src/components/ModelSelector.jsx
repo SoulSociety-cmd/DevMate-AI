@@ -1,10 +1,10 @@
 function ModelSelector({ value, onChange, disabled = false }) {
   const currentProvider = value?.provider || 'gemini'
-  const currentModel = value?.model || (currentProvider === 'openai' ? 'gpt-4o-mini' : 'gemini-2.0-flash')
+  const currentModel = value?.model || (currentProvider === 'openai' ? 'gpt-4o-mini' : 'gemini-3.6-flash')
 
   const handleProviderChange = (event) => {
     const provider = event.target.value
-    const defaultModel = provider === 'openai' ? 'gpt-4o-mini' : 'gemini-2.0-flash'
+    const defaultModel = provider === 'openai' ? 'gpt-4o-mini' : 'gemini-3.6-flash'
     onChange?.({ provider, model: defaultModel })
   }
 
@@ -29,7 +29,7 @@ function ModelSelector({ value, onChange, disabled = false }) {
           value={currentModel}
           onChange={handleModelChange}
           disabled={disabled}
-          placeholder={currentProvider === 'openai' ? 'gpt-4o-mini' : 'gemini-2.0-flash'}
+          placeholder={currentProvider === 'openai' ? 'gpt-4o-mini' : 'gemini-3.6-flash'}
         />
       </label>
     </div>
